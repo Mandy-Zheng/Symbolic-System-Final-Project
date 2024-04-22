@@ -44,3 +44,20 @@
 	 )
        )
   )
+
+
+
+#|
+A measure predicate, at least two notes as arguments.
+Return true if at least two notes, else false.
+|#
+(define (measure? . expr)
+  (>= 2 (length expr)) ;; at least 2 args
+  (define (check-element elts)
+    (if (null? elts) ;; empty
+	#t
+	(and (note? (car elts)) (check-element (cdr elts)))))
+  (check-elements expr))
+
+(measure? (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2))	
+(measure? (list ‘a#4 ‘bb3 2))
