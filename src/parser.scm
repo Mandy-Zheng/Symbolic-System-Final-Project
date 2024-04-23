@@ -48,6 +48,21 @@
        )
   )
 
+
+#|
+A meta-info predicate, all elements must be strings or number.
+|#
+(define (meta-info? expr)
+  (list? expr)
+  (let lp ((expr expr))
+    (if (null? expr)
+	#t
+	(and (or (number? (car expr)) (string? (car expr)))
+	     (lp (cdr expr))))))
+
+(meta-info? (list "hello" 1)) ; #t
+(meta-info? (list "hello" 1 (list 1))) ; #f   
+
 #|
 A measure predicate, at least two notes as arguments.
 Return true if at least two notes, else false.
@@ -58,11 +73,14 @@ Return true if at least two notes, else false.
     (if (null? elts) ;; empty
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
-  (check-elements expr))
+  (if (meta-info? (car expr)) ;; has optional
+      (and (>= 2 (length (cdr expr))) ;; at least two notes
+	   (check-elements (cdr expr)))	
+      (check-elements expr)))
+
 
 (measure? (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2))	
 (measure? (list ‘a#4 ‘bb3 2))
-
 
 
 #|
