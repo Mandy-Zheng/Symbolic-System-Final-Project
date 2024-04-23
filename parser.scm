@@ -44,3 +44,63 @@
 	 )
        )
   )
+
+
+
+(define (generate-lilypond-score)
+  (let ((score
+         '( (music
+             (relative c)
+             (c4 d e f)
+             (g4 a b c) ))))
+    (let ((out-port (open-output-file "score.ly")))
+      (if out-port
+          (begin
+            (display "#(set-global-staff-size 20)\n" out-port)
+            (display "#(define default-font-size 12)\n" out-port)
+            (write score out-port)
+            (close-output-port out-port))
+          (display "Error: Unable to create file 'score.ly'\n")))))
+
+
+(generate-lilypond-score)
+
+
+(use-modules (ice-9 process))
+
+(define (compile-score)
+  (call-with-output-file "compile.sh"
+    (lambda (output-port)
+      (display "lilypond score.ly" output-port)))
+  (let ((status (system* "sh" "compile.sh")))
+    (if (zero? status)
+        (display "Compilation successful\n")
+        (display "Compilation failed\n")))
+  (delete-file "compile.sh")) ; Clean up the temporary shell script
+(compile-score)
+
+
+(define (execute-command command)
+  (call-with-input-file (string-append "| " command)
+    (lambda (in)
+      (let loop ((char (read-char in)))
+        (if (eof-object? char)
+            '()
+            (begin
+              (display char)
+              (loop (read-char in))))))))
+
+(define (execute-command command)
+  (call-with-input-file command
+    (lambda (in)
+      (display (read-char in))
+      (let loop ((char (read-char in)))
+        (if (eof-object? char)
+            '()
+            (begin
+              (display char)
+              (loop (read-char in))))))))
+
+(execute-command "ls")
+
+(execute-command "ls")
