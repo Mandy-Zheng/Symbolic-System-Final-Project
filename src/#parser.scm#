@@ -159,5 +159,5 @@ Return true if at least two measures, else false.
 
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
-  (run-shell-command (string-append "open " file-path))) ;;see if it works on macs
+  (run-shell-command (string-append "emacs " file-path))) ;;see if it works on macs
 (open-pdf "score.pdf")
