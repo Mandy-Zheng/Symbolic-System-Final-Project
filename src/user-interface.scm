@@ -27,6 +27,7 @@
   (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
 
 ;; TODO make commands for user 
+; will call the generic adds
 (define (add! . expr)
   (display (list "TODO" expr)))
 

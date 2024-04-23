@@ -6,6 +6,7 @@
 (define add
   (simple-generic-procedure 'add 1 default-add))
 
+; TODO: remove add-note
 (define (add-note expr) (display 'TODO))
 (define (add-measure expr) (display 'TODO))
 (define (add-section expr) (display 'TODO))

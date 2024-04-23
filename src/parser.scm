@@ -165,6 +165,8 @@ Return true if at least two notes, else false.
 A section predicate, at least two measures as arguments.
 Return true if at least two measures, else false.
 |#
+; TODO: no longer symbols
+; TODO: first letter must be capitalized
 (define (section? . expr)
   (>= 2 (length expr)) ;; at least 2 args
   (define (check-elements elts)
@@ -173,9 +175,15 @@ Return true if at least two measures, else false.
 	  (and (measure? (car elts)) (check-elements (cdr elts)))))
   (check-elements expr))
 
+; TODO: fix test cases
 (measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)) (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))	
 (measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))
 
+; TODO: intermediate fn
+
+; (add (meta-info ...) (A#4 Bb3 2) (G#2 Bb1 2) | (A#4 Bb3 2) (G#2 Bb1 2) |)
+
+; only meta-info for measure and section
 
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
