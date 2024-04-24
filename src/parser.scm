@@ -167,7 +167,7 @@ Return true if the symbol follows this pattern, else false.
 A meta-info predicate, all elements must be strings or number.
 |#
 (define (meta-info? expr)
-  (list? expr)
+  (pair? expr)
   (let lp ((expr expr))
     (if (null? expr)
 	#t
@@ -177,27 +177,55 @@ A meta-info predicate, all elements must be strings or number.
 (meta-info? (list "hello" 1)) ; #t
 (meta-info? (list "hello" 1 (list 1))) ; #f   
 
+#|
+Get a list of notes from the measure
+|#
 (define (get-notes-in-measure measure)
-  (cadr measure)
-  )
+  (cadr measure))
+
+#|
+(pp (get-notes-in-measure (list (list "test" 1)
+				(list (list "A#4" "Bb3" "2")
+				      (list "G#2" "Bb1" "2")))))
+;; (("A#4" "Bb3" "2") ("G#2" "Bb1" "2"))
+
+|#
+
 #|
 A measure predicate, at least two notes as arguments.
-Return true if at least two notes, else false.
+Has 1 meta and a list of notes.
+Return true if at least two notes and meta, else false.
 |#
-(define (measure? . expr)
-  (>= 2 (length expr)) ;; at least 2 args
+(define (measure? expr)
   (define (check-elements elts)
     (if (null? elts) ;; empty
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
-  (if (meta-info? (car expr)) ;; has optional
-      (and (>= 2 (length (cdr expr))) ;; at least two notes
-	   (check-elements (cdr expr)))	
-      (check-elements expr)))
+  (if (and (meta-info? (car expr))
+	   (not (note? (car expr)))) ;; has meta
+      (and (<= 2 (length (cadr expr))) ;; at least two notes
+	   (check-elements (cadr expr)))
+      #f))
+
+(measure? (list
+	   (list "test" 1) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2")))) ;; #t
+
+;; meta with 1 note only
+(measure? (list
+	   (list "test" 1) ; meta
+	   (list (list "A#4" "Bb3" "2")))) ; #f
+
+;; no meta with 1 note only		
+(measure? (list
+	   (list (list "A#4" "Bb3" "2")))) ; #f
 
 
-(measure? (list "A#4" "Bb3" "2") (list "G#2" "Bb1" "2")) ;#t	
-(measure? (list "A#4" "Bb3" "2")) ; #t
+(measure? (list
+	   (list (list "A#4" "Bb3" "2")
+		(list "A#4" "Bb3" "2")))) ; #f
+
 
 
 #|
