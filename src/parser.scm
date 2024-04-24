@@ -52,6 +52,42 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
 (letter? "F") ;("F" "G")
 (letter? "G") ;("G")
 
+
+(define (get-letter pitch)
+  (substring pitch 0 1)
+  )
+
+(define (get-accidentals pitch)
+  (cond ((and (> (string-length pitch) 2) (double-accidentals? (substring pitch 1 3))) (substring pitch 1 3))
+	((accidentals? (substring pitch 1 2)) (substring pitch 1 2))
+	(else ""))
+  )
+
+(define (get-octave pitch)
+  (let ((start-idx (+ (string-length (get-letter pitch)) (string-length (get-accidentals pitch)))))
+    (substring pitch start-idx (string-length pitch))
+    )
+  )
+
+(get-letter "A#3") ; A
+(get-accidentals "A#3") ; #
+(get-octave "A#3") ; 3
+
+(get-letter "G2") ; G
+(get-accidentals "G2") ; ''
+(get-octave "G2") ; 2
+
+(get-letter "Fbb10") ; F
+(get-accidentals "Fbb10") ; bb
+(get-octave "Fbb10") ; 10
+
+(define (get-first-pitch note)
+  (car note))
+
+(define (get-frequency note)
+  (list-ref note (- (length note) 1)))
+
+
 #|
 A pitch predicate where it returns true if the input is a valid symbol following the CFL:
 pitch ::= letter accidental? octave 
@@ -126,6 +162,7 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
 
 
+;;TODO: should we make meta-info more specific? like key and time signature etc
 #|
 A meta-info predicate, all elements must be strings or number.
 |#
@@ -140,7 +177,9 @@ A meta-info predicate, all elements must be strings or number.
 (meta-info? (list "hello" 1)) ; #t
 (meta-info? (list "hello" 1 (list 1))) ; #f   
 
-
+(define (get-notes-in-measure measure)
+  (cadr measure)
+  )
 #|
 A measure predicate, at least two notes as arguments.
 Return true if at least two notes, else false.
@@ -175,7 +214,8 @@ Return true if at least two measures, else false.
 	  (and (measure? (car elts)) (check-elements (cdr elts)))))
   (check-elements expr))
 
-; TODO: fix test cases
+					; TODO: fix test cases
+;;TODO measure = ((meta info) (notes)))
 (measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)) (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))	
 (measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))
 
