@@ -227,5 +227,12 @@ Return true if at least two measures, else false.
 
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
-  (run-shell-command (string-append "open " file-path))) ;;see if it works on macs
-(open-pdf "score.pdf")
+  (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
+  (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
+(open-pdf "output")
+
+
+"G#3" --> "Ges'''"
+
+;;; convert to a specific number
+;;; more esaily

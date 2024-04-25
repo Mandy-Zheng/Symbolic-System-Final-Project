@@ -17,7 +17,7 @@
 
 (define (convert-pitch pitch)
   ;(print pitch)
-  (string-append (get-letter pitch) (convert-accidental (get-accidentals pitch)) (convert-octave (string->number (get-octave pitch))))
+  (string-append (string-downcase (get-letter pitch)) (convert-accidental (get-accidentals pitch)) (convert-octave (string->number (get-octave pitch))))
   )
 
 (define (convert-note note)
@@ -35,9 +35,9 @@
 	)
       )
   )
-(convert-note (list "A#2" "1")) ; "Ais,,1"
+(convert-note (list "A#2" "1")) ; "ais,,1"
 
-(convert-note (list "A#2" "G2" "Bb4" "1")) ; "<Ais,, G,, Bes >1"
+(convert-note (list "A#2" "G2" "Bb4" "1")) ; "<ais,, g,, bes >1"
 
 (define (convert-octave octave)
   (cond ((= 0 octave)  ",,,,")
@@ -86,25 +86,37 @@
   convert-section)
 
 
-(define (convert-metadata metadata)
-  (format #t
-  "global = {
-    \time 4/4
-    \numericTimeSignature
-    \key c \major
-  }"
-  (time-signature metadata)
-  (key metadata)
+(define (convert-piece piece)
+  (call-with-output-file "output.ly"
+    (lambda (output-port)
+      (display "\\version \"2.18.2\"\n" output-port)
+      (display "\\relative {\n" output-port)
+      (display "  \\clef bass \n
+ \\global \n" output-port)
+      (display (convert-measure piece) output-port)
+      (display "}\n" output-port))))
+
+(convert-piece (list (list) (list (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") ) ))
+
+(write-lilypond-code-to-file)
+
+(define (convert-metadata measure)
+  (string-append
+   "\\clef " (get-clef measure) " \n"
+   "\\time " (get-time measure) "\n"
+   "\\key " (get-key measure) " \\major"
   )
-)
+  )
+
+(get-clef (list (list "treble" "4/4" "c") (list)))
+
+(display (convert-metadata (list (list "treble" "4/4" "c") (list))))
+
+(convert-metadata (list ()))
 
 
-(define (convert-note))
-(define (convert-measure))
 
-(define (convert-music voice)
-  
-  
+
   
   (
 
@@ -134,3 +146,10 @@
 ;;  \key g \major % Change to the key of G major
 ;;  c4 d e f | g2 g4 | a8 a g4 f2 | e1 | r2 r4 r8 r16 r32 r64 |
 ;;}
+
+
+
+
+
+
+(add (G#3 1) (G#3 1) (G#3 1) (G#3 1))
