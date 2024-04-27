@@ -10,7 +10,7 @@
 (define author-name)
 (define session-environment)
 
-;; FOR add and modify to use to get body
+;; FOR modify to use to get body
 (define (get-current-piece-body)
   (if (null? current-piece-name)
      ; (begin
@@ -59,7 +59,7 @@
 ;;; Helper functions
 ;; Return the measure at index i
 (define (get-measure-at-index i)
-  (list-ref (lookup-variable-value current-piece-name session-environment) index))
+  (list-ref (lookup-variable-value current-piece-name session-environment) i))
 
 (define (save-body new-body)
   (set-variable-value! current-piece-name new-body session-environment))
@@ -107,6 +107,40 @@
 	(save-body (append! body new-additions))) ; like extend   
     (get-current-body!)))
 
+;; Insert by splitting two portion. Helper for insert!.
+(define (insert-at index element lst)
+  (if (= index 0)
+      (cons element lst) ; add to end
+      (cons (car lst)    ; add to front
+            (insert-at (- index 1) element (cdr lst))))) 
+#|
+(define my-list '(1 2 3 4 5))
+(display (insert-at 2 100 my-list))
+|#
+
+(define (insert! insert-i new-measure)
+  (let ((current-body (get-current-piece-body)))
+    (save-body (insert-at insert-i new-measure current-body)))
+  (get-current-body!))
+
+
+(define (delete-by-index index lst)
+  (cond ((null? lst) '())  ; empty
+        ((= index 0) (cdr lst)) ; return the rest of the list
+        (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
+#|
+(define my-list '(1 2 3 4 5))
+(display (delete-by-index 1 my-list)) ;(1 3 4 5)
+|#
+
+;; Given the index of the measure, delete the measure.
+(define (delete! delete-i)
+  (let ((current-body (get-current-piece-body)))
+    (save-body (delete-by-index delete-i current-body)))
+  (get-current-body!))  
+
+
+;;; TESTING UI
 
 (start-composing 'nhung)
 (get-all-pieces!)
@@ -126,5 +160,14 @@
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
 
-; (add! (list "a#4" 2))
-;;
+
+(insert! 1 (list
+	  (list "test-meta 3" 2) ; meta
+	  (list (list "A#4" "Bb3" "2")
+		(list "G#2" "Bb1" "2"))))
+
+
+(delete! 1)
+(delete! 0)
+
+
