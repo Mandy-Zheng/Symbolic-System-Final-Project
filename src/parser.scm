@@ -162,13 +162,13 @@ Return true if the symbol follows this pattern, else false.
   )
 
 
-|#
+#|
 (note? (list "A#2" "3")) ;#t
 (note? (list "Cb3" "G##2" "2")) ;#t
 (note? (list "Cb3" "G##2")) ;#f
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
-#|
+|#
 
 (define (get-metadata measure)
   (car measure))
