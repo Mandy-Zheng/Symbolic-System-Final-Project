@@ -1,10 +1,11 @@
 ; Generic add procedures
 (load "~/Symbolic-System-Final-Project/src/parser.scm")
-(define (default-convert expr)
-  (error "Unknown expression type" expression))
+;; (define (default-convert expr)
+;;   (error "Unknown expression type" expression))
 
-(define convert
-  (simple-generic-procedure 'add 1 default-add))
+
+;;NOTE: TO USE CONVERT ON A PIECE OF MUSIC, USE CONVERT-PIECE OR CONVERT-SECTION
+
 
 (define (convert-accidental accidental)
   (cond ((string=? accidental sharp) "is")
@@ -16,7 +17,6 @@
   )
 
 (define (convert-pitch pitch)
-  ;(print pitch)
   (string-append (string-downcase (get-letter pitch)) (convert-accidental (get-accidentals pitch)) (convert-octave (string->number (get-octave pitch))))
   )
 
@@ -26,7 +26,6 @@
       (let lp ((chord-info note)
 	       (frequency (get-frequency note))
 	       (converted "<"))
-        (print note)
 	(if (= 1 (length chord-info))
 	    (string-append converted ">" (car chord-info))
 	    (lp (cdr chord-info) frequency (string-append converted (convert-pitch (car chord-info)) " "))
@@ -57,62 +56,116 @@
   (let lp ((measure (get-notes-in-measure measure-info))
 	   (converted ""))
     (if (= (length measure) 1)
-	(string-append converted (convert-note (car measure)) " |")
+	(string-append converted (convert-note (car measure)) " | \n")
 	(lp (cdr measure) (string-append converted (convert-note (car measure)) " "))
     )
     )
   )
 
-(convert-measure (list (list) (list (list "A2" "1") (list "G##2" "1") (list "C1" "E1" "G1" "2") ) )) ; "A,,1 Gisis,,1 <C,,, E,,, G,,, >2 |"
+(convert-measure (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ;"fis,,,2 a,,1 | \n"
 
+(define (convert-time time)
+  (string-append "\\time " time " "))
+(define (convert-key key)
+  (string-append "\\key " (string-downcase (car key)) " \\" (string-downcase (cadr key)) " "))
+(define (convert-clef clef)
+  (string-append "\\clef " clef " "))
+
+(define (convert-time-if-different ptime time)
+  (if (not (string=? ptime time))
+      (convert-time time)
+      ""
+      ))
+
+(define (convert-key-if-different pkey key)
+  (if (not (and (string=? (car pkey) (car key)) (string=? (cadr pkey) (cadr key))))
+      (convert-key key)
+      ""
+      ))
+
+(define (convert-clef-if-different pclef clef)
+  (if (not (string=? pclef clef))
+      (convert-clef clef)
+      ""
+      ))
+
+(define (convert-metadata-if-different ptime pkey pclef time key clef)
+  (let ((time (convert-time-if-different ptime time))
+    (key (convert-key-if-different pkey key))
+    (clef (convert-clef-if-different pclef clef)))
+    (if (= 0 (string-length (string-append time key clef)))
+	(string-append "")
+	(string-append "\\bar \"||\" " time key clef "\n")
+	)
+
+    ))
+
+(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
 
 (define (convert-section . sections)
-  (apply string-append (map (lambda (measure) (string-append (convert-measure measure) " ")) sections))
+
+  (let lp ((sections sections)
+	   (measure (car sections))
+	   (converted (convert-metadata (car sections)))
+	   (past-time (get-time (car sections)))
+	   (past-key (get-key (car sections)))
+	   (past-clef (get-clef (car sections)))
+	   )
+    (let ((time (get-time measure))
+	  (key (get-key measure))
+	  (clef (get-clef measure)))
+      (if (= 0 (length (cdr sections)))
+	  (string-append converted (convert-metadata-if-different past-time past-key past-clef time key clef) (convert-measure measure))
+	  (lp (cdr sections) (cadr sections) (string-append converted (convert-metadata-if-different past-time past-key past-clef time key clef) (convert-measure measure)) time key clef)
+      
+      )
+      )
+    )
   )
+(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
 
-(convert-section (list (list) (list (list "A2" "1") (list "G##2" "1") (list "C1" "E1" "G1" "2"))) (list (list) (list (list "B#4" "1") (list "Db2" "1") (list "F4" "A3" "C4" "2")))) ;"A,,1 Gisis,,1 <C,,, E,,, G,,, >2 | Bis1 Des,,1 <F A, C >2 | "
+;; (define-generic-procedure-handler convert
+;;   (match-args note?)
+;;   convert-note)
 
+;; (define-generic-procedure-handler convert
+;;   (match-args measure?)
+;;   convert-measure)
 
-(define-generic-procedure-handler convert
-  (match-args note?)
-  convert-note)
-
-(define-generic-procedure-handler convert
-  (match-args measure?)
-  convert-measure)
-
-(define-generic-procedure-handler convert
-  (match-args section?)
-  convert-section)
+;; (define-generic-procedure-handler convert
+;;   (match-args section?)
+;;   convert-section)
 
 
-(define (convert-piece piece)
+(define (convert-piece . piece)
   (call-with-output-file "output.ly"
     (lambda (output-port)
       (display "\\version \"2.18.2\"\n" output-port)
       (display "\\relative {\n" output-port)
-      (display "  \\clef bass \n
- \\global \n" output-port)
-      (display (convert-measure piece) output-port)
+      (display (apply convert-section piece) output-port)
       (display "}\n" output-port))))
 
-(convert-piece (list (list) (list (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") ) ))
+(convert-piece (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") ))
 
-(write-lilypond-code-to-file)
 
 (define (convert-metadata measure)
   (string-append
-   "\\clef " (get-clef measure) " \n"
-   "\\time " (get-time measure) "\n"
-   "\\key " (get-key measure) " \\major"
+   (convert-time (get-time measure))
+   (convert-key (get-key measure))
+   (convert-clef (get-clef measure))
+   "\n"
   )
   )
 
-(get-clef (list (list "treble" "4/4" "c") (list)))
+(get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
 
-(display (convert-metadata (list (list "treble" "4/4" "c") (list))))
+(load-option 'synchronous-subprocess)
+(define (open-pdf file-path)
+  (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
+  (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
+(open-pdf "output")
 
-(convert-metadata (list ()))
 
 
 

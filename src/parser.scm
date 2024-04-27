@@ -161,6 +161,15 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
 
+(define (get-metadata measure)
+  (car measure))
+
+(define (get-time measure)
+  (car (get-metadata measure)))
+(define (get-key measure)
+  (cadr (get-metadata measure)))
+(define (get-clef measure)
+  (caddr (get-metadata measure)))
 
 ;;TODO: should we make meta-info more specific? like key and time signature etc
 #|
@@ -181,7 +190,7 @@ A meta-info predicate, all elements must be strings or number.
 Get a list of notes from the measure
 |#
 (define (get-notes-in-measure measure)
-  (cadr measure))
+  (cdr measure))
 
 #|
 (pp (get-notes-in-measure (list (list "test" 1)
@@ -253,11 +262,7 @@ Return true if at least two measures, else false.
 
 ; only meta-info for measure and section
 
-(load-option 'synchronous-subprocess)
-(define (open-pdf file-path)
-  (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
-  (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
-(open-pdf "output")
+
 
 
 "G#3" --> "Ges'''"
