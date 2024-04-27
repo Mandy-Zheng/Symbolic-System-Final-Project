@@ -140,6 +140,24 @@
   (get-current-body!))  
 
 
+
+; Add by parsing
+; TODO: combine with add! above
+(define (add-parse . expr)
+  (cond
+    ((note? expr) expr) ; just return the note list (no flattening)
+    (#t expr) ; measure
+    (#t expr) ; section
+    (else #f)))
+
+
+(note? (add-parse '("G#2" "2"))) ; #t
+(note? (add-parse '("G#2" "B2" "2"))) ; #t
+(measure? (add-parse '(("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t
+
+(section? (add '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
+(section? (add '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+
 ;;; TESTING UI
 
 (start-composing 'nhung)
