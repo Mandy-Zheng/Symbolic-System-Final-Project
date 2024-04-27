@@ -139,8 +139,45 @@
     (save-body (delete-by-index delete-i current-body)))
   (get-current-body!))  
 
+;; Returns whether the expression contains at least one incidence of "|".
+(define (contains-bar expr)
+  (if (= (length expr) 0)
+    #f
+    (or
+      (and (string? (first expr)) (string=? (first expr) "|"))
+      (contains-bar (cdr expr)))))
+
+#|
+(contains-bar '("|")) ; #t
+(contains-bar '()) ; #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; #t
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; #t
+(contains-bar '("G#2" "2")) ; #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
+|#
+
+
+; Add by parsing
+; TODO: combine with add! above
+; TODO: catch error if malformed? so it doesn't try to apply?
+(define (add-parse expr)
+  (cond
+    ((contains-bar expr) expr) ; section (contains at least one "|")
+    ((and (string? (first expr)) (note? expr)) expr) ; just return the note list (no flattening)
+    (else (list (car expr) (cdr expr))))) ; measure 
+
+
+(note? (add-parse '("G#2" "2"))) ; #t
+(note? (add-parse '("G#2" "B2" "2"))) ; #t
+(measure? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t (note the simpler syntax)
+
+(section? (add-parse '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
+(section? (add-parse '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
 
 ;;; TESTING UI
+
+
+; TODO: can we try to eliminate "" by storing away note names?
 
 (start-composing 'nhung)
 (get-all-pieces!)
