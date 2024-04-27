@@ -1,6 +1,9 @@
 
 ;; Load logic for session environment
 (load "environment.scm")
+;; generic add
+(load "add.scm")
+(load "parser.scm")
 
 ;; global vars for each session
 (define current-piece-name)
@@ -31,6 +34,17 @@
                   (cdr message))))
   'done)
 
+(define (display-measures message)
+  (if (pair? message)
+      (begin
+        (fresh-line)
+        (display-item (car message))
+        (for-each (lambda (item)
+                    (display "\n")
+                    (display-item item))
+                  (cdr message))))
+  'done)
+
 (define (display-item item)
   (display item)
   'done)
@@ -41,6 +55,16 @@
   (display-message (list "Here are the available commands that you can use to compose your music:"))
   (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
 
+
+;;; Helper functions
+;; Return the measure at index i
+(define (get-measure-at-index i)
+  (list-ref (lookup-variable-value current-piece-name session-environment) index))
+
+(define (save-body new-body)
+  (set-variable-value! current-piece-name new-body session-environment))
+
+;;; Getter: display stuffs for users
 ;; Get the names of all current pieces.
 (define (get-all-pieces!)
   (let ((all-pieces (environment-variables session-environment)))
@@ -49,20 +73,58 @@
 	(display-message (list "All pieces: " (environment-variables
 					       session-environment))))))
 
+(define (get-current-piece!)
+  (display-message (list "The current piece is:" current-piece-name)))
+
+(define (get-current-body!)
+  (if (null? current-piece-name)
+      (display-message (list "Oops, you haven't selected a piece to compose."))
+      (begin
+	(let ((body (lookup-variable-value current-piece-name session-environment)))
+	  
+	  (display-message (list "Here's your current piece:"))
+	  (display-measures (map (lambda (measure index)
+				  (list
+				   (string-append "Measure-" (number->string index))
+				   measure))
+				body (iota (length body))))))))
+
+	
+
+;; Commands to compose
 (define (define-new-piece! piece-name)
   (define-variable! piece-name (list ) session-environment)
   (set! current-piece-name piece-name)
   (display-message (list "You're starting a new piece:" piece-name)))
-  
-;; TODO make commands for user 
-; will call the generic adds
+
+
+;; Can only add by measure and section.
 (define (add! . expr)
-  (display (list "TODO" expr)))
+  (let ((new-additions expr) ; TODO use add generic
+	(body (get-current-piece-body)))
+    (if (measure? expr)
+	(save-body (append! body (list new-additions))) ; keep measure as 1 list
+	(save-body (append! body new-additions))) ; like extend   
+    (get-current-body!)))
 
 
 (start-composing 'nhung)
 (get-all-pieces!)
 (define-new-piece! 'twinkle)
+
+(get-all-pieces!)
+(get-current-piece!)
+(get-current-body!)
+
+(add! (list
+	   (list "test" 1) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
+
+(add! (list
+	   (list "test-meta 2" 2) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
+
 ; (add! (list "a#4" 2))
-
-
+;;

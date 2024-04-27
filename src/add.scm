@@ -1,5 +1,7 @@
 ; Generic add procedures
 
+(load "generic-procedures.scm")
+
 (define (default-add expr)
   (error "Unknown expression type" expression))
 
@@ -8,7 +10,9 @@
 
 ; TODO: remove add-note
 (define (add-note expr) (display 'TODO))
-(define (add-measure expr) (display 'TODO))
+(define (add-measure expr) (
+  expr ;TODO? should be in scheme in not already
+  ))
 (define (add-section expr) (display 'TODO))
 
 (define-generic-procedure-handler add
