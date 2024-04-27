@@ -238,21 +238,21 @@ Return true if at least two notes and meta, else false.
 
 #|
 A section predicate, at least two measures as arguments.
-Return true if at least two measures, else false.
+Has 1 meta and a list of measures.
+Return true if at least two measures and meta, else false.
 |#
-; TODO: no longer symbols
-; TODO: first letter must be capitalized
-(define (section? . expr)
-  (>= 2 (length expr)) ;; at least 2 args
+(define (section? expr)
   (define (check-elements elts)
     (if (null? elts) ;; empty
-	  #t
-	  (and (measure? (car elts)) (check-elements (cdr elts)))))
-  (check-elements expr))
+	#t
+	(and (measure? (car elts)) (check-elements (cdr elts)))))
+  (if (and (meta-info? (car expr))
+	   (not (measure? (car expr)))) ;; has meta
+      (and (<= 2 (length (cadr expr))) ;; at least two measures
+	   (check-elements (cadr expr)))
+      #f))
+#|
 
-
-
-; TODO: intermediate fn
 
 ; (add (meta-info ...) (A#4 Bb3 2) (G#2 Bb1 2) | (A#4 Bb3 2) (G#2 Bb1 2) |)
 
