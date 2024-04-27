@@ -18,10 +18,12 @@ An accidental predicate where it returns true if the symbol is '# or 'b.
   (or (string=? expr sharp)
       (string=? expr flat))
   )
+#|
 (accidentals? "#") ;#t
 (accidentals? "b") ;#t
 (accidentals? "##") ;#f
 (accidentals? "###") ;#f
+|#
 
 #|
 A double accidental predicate where it returns true if the symbol is '## or 'bb.
@@ -31,11 +33,12 @@ A double accidental predicate where it returns true if the symbol is '## or 'bb.
   (or (string=? expr double-sharp)
       (string=? expr double-flat))
   )
-
+#|
 (double-accidentals? "b") ; #f
 (double-accidentals? "bb") ; #t
 (double-accidentals? "##") ; #t
 (double-accidentals? "bbb") ;#f
+|#
 
 #|
 A letter predicate where it returns true if the symbol is a letter from A-G.
@@ -44,14 +47,14 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
   (member expr (list "A" "B" "C" "D" "E" "F" "G"))
   )
 
-
+#|
 (letter? "A") ;("A" "B" "C" "D" "E" "F" "G")
 (letter? "a") ;#f
 (letter? "C") ; ("C" "D" "E" "F" "G")
 (letter? "Ab") ;#f
 (letter? "F") ;("F" "G")
 (letter? "G") ;("G")
-
+|#
 
 (define (get-letter pitch)
   (substring pitch 0 1)
@@ -68,7 +71,7 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
     (substring pitch start-idx (string-length pitch))
     )
   )
-
+#|
 (get-letter "A#3") ; A
 (get-accidentals "A#3") ; #
 (get-octave "A#3") ; 3
@@ -80,6 +83,7 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
 (get-letter "Fbb10") ; F
 (get-accidentals "Fbb10") ; bb
 (get-octave "Fbb10") ; 10
+|#
 
 (define (get-first-pitch note)
   (car note))
@@ -117,7 +121,7 @@ octave ::= [0-9]+
 	     )
 	   )
 	  )))
-
+#|
 (pitch? "A#3") ;#t
 (pitch? "#3") ;#f
 (pitch? "f##3") ;#f
@@ -126,17 +130,20 @@ octave ::= [0-9]+
 (pitch? "Cbb3") ;#t
 (pitch? "F##17") ;#t
 (pitch? "2") ;#f
+|#
 
 (define (frequency? expr)
   (and (string->number expr) (>= (string->number expr) 0))
   )
 
+#|
 (frequency? "1") ;#t
 (frequency? "4") ;#t
 (frequency? "1/3") ;#t
 (frequency? "a1") ;#f
 (frequency? "-4") ;#f
 (frequency? "0") ;#t
+|#
 
 #|
 A note predicate where it is represented by a pitch and then a duration for teh note.
@@ -155,11 +162,13 @@ Return true if the symbol follows this pattern, else false.
   )
 
 
+|#
 (note? (list "A#2" "3")) ;#t
 (note? (list "Cb3" "G##2" "2")) ;#t
 (note? (list "Cb3" "G##2")) ;#f
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
+#|
 
 (define (get-metadata measure)
   (car measure))
@@ -182,9 +191,10 @@ A meta-info predicate, all elements must be strings or number.
 	#t
 	(and (or (number? (car expr)) (string? (car expr)))
 	     (lp (cdr expr))))))
-
+#|
 (meta-info? (list "hello" 1)) ; #t
 (meta-info? (list "hello" 1 (list 1))) ; #f   
+|#
 
 #|
 Get a list of notes from the measure
@@ -215,7 +225,7 @@ Return true if at least two notes and meta, else false.
       (and (<= 2 (length (cadr expr))) ;; at least two notes
 	   (check-elements (cadr expr)))
       #f))
-
+#|
 (measure? (list
 	   (list "test" 1) ; meta
 	   (list (list "A#4" "Bb3" "2")
@@ -235,7 +245,7 @@ Return true if at least two notes and meta, else false.
 	   (list (list "A#4" "Bb3" "2")
 		(list "A#4" "Bb3" "2")))) ; #f
 
-
+|#
 
 #|
 A section predicate, at least two measures as arguments.
@@ -251,10 +261,7 @@ Return true if at least two measures, else false.
 	  (and (measure? (car elts)) (check-elements (cdr elts)))))
   (check-elements expr))
 
-					; TODO: fix test cases
-;;TODO measure = ((meta info) (notes)))
-(measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)) (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))	
-(measure? (list (list ‘a#4 ‘bb3 2) (list ‘g# ‘b 2)))
+
 
 ; TODO: intermediate fn
 
@@ -263,9 +270,8 @@ Return true if at least two measures, else false.
 ; only meta-info for measure and section
 
 
-
-
-"G#3" --> "Ges'''"
+|#
+; "G#3" --> "Ges'''"
 
 ;;; convert to a specific number
 ;;; more esaily
