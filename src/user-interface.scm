@@ -162,17 +162,24 @@
 ; TODO: catch error if malformed? so it doesn't try to apply?
 (define (add-parse expr)
   (cond
-    ((contains-bar expr) expr) ; section (contains at least one "|")
     ((and (string? (first expr)) (note? expr)) expr) ; just return the note list (no flattening)
-    (else (list (car expr) (cdr expr))))) ; measure 
+    ((contains-bar expr) expr) ; section (contains at least one "|")
+    (else (list (car expr) (cdr expr))))) ; measure
 
-
+#|
 (note? (add-parse '("G#2" "2"))) ; #t
 (note? (add-parse '("G#2" "B2" "2"))) ; #t
-(measure? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t (note the simpler syntax)
+(measure? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t (note the simpler syntax with fewer parentheses)
 
-(section? (add-parse '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
-(section? (add-parse '(("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+; note the simpler syntax with fewer parentheses and no metadata for second measure
+(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
+(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+|#
+
+; TODO (fix section? with meta)
+; (internal rep of section is just nested lists -- easier to deal with!)
+; TODO: get-section-meta
+; TODO: get-number-measures-in-section
 
 ;;; TESTING UI
 
