@@ -8,9 +8,11 @@
 ;; global vars for each session
 (define current-piece-name)
 (define author-name)
-(define session-environment)
+(define session-environment) ;; list of voices, voice is list of measures
+(define current-voice-name)
+(define current-voice-index) 
 
-;; FOR modify to use to get body
+;; FOR modify to use to get body, include all voices
 (define (get-current-piece-body)
   (if (null? current-piece-name)
      ; (begin
@@ -18,6 +20,7 @@
 	#f ;; don't do anything
         (lookup-variable-value current-piece-name session-environment)))
 
+;; Display welcome message, and make an empty environment
 (define (start-composing my-name)
   (set! author-name my-name)
   (set! session-environment (make-global-environment))
@@ -34,6 +37,7 @@
                   (cdr message))))
   'done)
 
+;; same as display-message, just have new line in between
 (define (display-measures message)
   (if (pair? message)
       (begin
@@ -57,46 +61,112 @@
 
 
 ;;; Helper functions
-;; Return the measure at index i
+(define (find-index-by-first-element list-of-lists name)
+  (let loop ((lists list-of-lists)
+             (index 0))
+    (cond ((null? lists) #f) ; not found
+          ((equal? (caar lists) name) index)
+          (else (loop (cdr lists) (+ index 1))))))
+
+;; updates the current-voice-index
+(define (update-current-voice-index)
+  (if (null? current-voice-name)
+      #f
+      (begin
+	(let ((body (get-current-piece-body)))
+	  (set! current-voice-index
+		(find-index-by-first-element body current-voice-name))))))
+  
+
+;; with the voice name and list of measures
+(define (get-current-voice-body)
+  (let ((body (get-current-piece-body)))
+    (list-ref body current-voice-index)))
+
+;; without the voice name
+(define (get-current-voice-measures)
+  (cdr (get-current-voice-body)))
+
+;; Return the measure at index i of the current-voice
 (define (get-measure-at-index i)
-  (list-ref (lookup-variable-value current-piece-name session-environment) i))
+  (let ((voice-body (get-current-voice-measures)))
+    (list-ref voice-body i)))
 
 (define (save-body new-body)
   (set-variable-value! current-piece-name new-body session-environment))
 
+;(define (save-voice
+
+
+
 ;;; Getter: display stuffs for users
 ;; Get the names of all current pieces.
-(define (get-all-pieces!)
+(define (get-all-pieces-names!)
   (let ((all-pieces (environment-variables session-environment)))
     (if (null? all-pieces)
 	(display-message (list "You haven't written any piece."))
 	(display-message (list "All pieces: " (environment-variables
 					       session-environment))))))
 
-(define (get-current-piece!)
+
+(define (get-current-piece-name!)
   (display-message (list "The current piece is:" current-piece-name)))
 
-(define (get-current-body!)
+;; display full voice body
+(define (get-current-voice-piece!)
+  (if (null? current-voice-name)
+      (display-message (list "Oops, you haven't selected a voice to edit."))
+      (begin
+	(let ((voice-body (get-current-voice-body)))
+	  (display-message (list "Here's your current voice" (car voice-body)))
+	  (display-measures (map (lambda (measure index)
+			           (list
+				    (string-append "Measure-" (number->string index))
+				    measure))
+				 (cdr voice-body) (iota (length (cdr voice-body)))))))))
+
+;; display full piece body
+(define (get-current-piece!)
   (if (null? current-piece-name)
       (display-message (list "Oops, you haven't selected a piece to compose."))
       (begin
-	(let ((body (lookup-variable-value current-piece-name session-environment)))
-	  
+	(let ((body (get-current-piece-body)))
 	  (display-message (list "Here's your current piece:"))
-	  (display-measures (map (lambda (measure index)
-				  (list
-				   (string-append "Measure-" (number->string index))
-				   measure))
-				body (iota (length body))))))))
+	  ;; just new line instead 
+	  (for-each (lambda (voice index)
+			  (let ((all-measures    
+			     	(map (lambda (measure index)
+				       (list
+					(string-append "Measure-" (number->string index))
+					measure))
+				     (cdr voice) (iota (length (cdr voice))))))
+			    (display-message (list "Voice" (car voice)))
+			    (display-measures (list all-measures))))
+		    body (iota (length body)))))))
 
-	
+
 
 ;; Commands to compose
 (define (define-new-piece! piece-name)
   (define-variable! piece-name (list ) session-environment)
   (set! current-piece-name piece-name)
-  (display-message (list "You're starting a new piece:" piece-name)))
+  (display-message (list "You're starting a new piece:" piece-name))
+  (display-message (list "Please start by defining a voice for your first voice.")))
 
+
+(define (define-new-voice! voice-name)
+  (set! current-voice-name voice-name)
+  ;; append new voice to body
+  (let ((piece-body (get-current-piece-body)))
+    (save-body (append! piece-body (list (list voice-name)))))
+  (update-current-voice-index)
+  (display-message (list "You're now starting voice" voice-name
+			 "at index:" current-voice-index))
+  (get-current-piece!))
+  
+
+
+;;; TODO
 
 ;; Can only add by measure and section.
 (define (add! . expr)
@@ -191,9 +261,13 @@
 (get-all-pieces!)
 (define-new-piece! 'twinkle)
 
+(define-new-voice! 'one)
+
+
 (get-all-pieces!)
 (get-current-piece!)
-(get-current-body!)
+
+
 
 (add! (list
 	   (list "test" 1) ; meta
