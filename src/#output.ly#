@@ -1,0 +1,19 @@
+\version "2.22.0"
+
+\score {
+  \new PianoStaff <<
+    \new Staff {
+      \clef "treble"
+      \relative c' {
+        c4 d e f | g a b c
+      }
+    }
+    \new Staff {
+      \clef "bass"
+      \relative c {
+        e4 f g a | b c d e
+      }
+    }
+  >>
+  \layout {}
+}

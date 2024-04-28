@@ -5,7 +5,28 @@
 
 
 ;;NOTE: TO USE CONVERT ON A PIECE OF MUSIC, USE CONVERT-PIECE OR CONVERT-SECTION
+(define (convert-metadata measure)
+  (string-append
+   (convert-time (get-time measure))
+   (convert-key (get-key measure))
+   (convert-clef (get-clef measure))
+   "\n"
+  )
+  )
 
+(define (convert-octave octave)
+  (cond ((= 0 octave)  ",,,,")
+	((= 1 octave) ",,,")
+	((= 2 octave) ",,")
+	((= 3 octave) ",")
+	((= 4 octave) "")
+	((= 5 octave) "'")
+	((= 6 octave)  "''")
+	((= 7 octave)  "'''")
+	((= 8 octave)  "''''")
+	(else (error "Invalid octave")))
+
+  )
 
 (define (convert-accidental accidental)
   (cond ((string=? accidental sharp) "is")
@@ -37,20 +58,6 @@
 (convert-note (list "A#2" "1")) ; "ais,,1"
 
 (convert-note (list "A#2" "G2" "Bb4" "1")) ; "<ais,, g,, bes >1"
-
-(define (convert-octave octave)
-  (cond ((= 0 octave)  ",,,,")
-	((= 1 octave) ",,,")
-	((= 2 octave) ",,")
-	((= 3 octave) ",")
-	((= 4 octave) "")
-	((= 5 octave) "'")
-	((= 6 octave)  "''")
-	((= 7 octave)  "'''")
-	((= 8 octave)  "''''")
-	(else (error "Invalid octave")))
-
-  )
 
 (define (convert-measure measure-info)
   (let lp ((measure (get-notes-in-measure measure-info))
@@ -135,28 +142,27 @@
 ;; (define-generic-procedure-handler convert
 ;;   (match-args section?)
 ;;   convert-section)
+(define (convert-voice voice)
+  (print "voice" voice)
+  (string-append "\\new Staff { \n \\relative c' {\n" (apply convert-section (cdr voice)) "} \n } \n")
+  )
 
+(display (convert-voice (list (list "voice1") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") ))))
 
 (define (convert-piece . piece)
   (call-with-output-file "output.ly"
     (lambda (output-port)
-      (display "\\version \"2.18.2\"\n" output-port)
-      (display "\\relative {\n" output-port)
-      (display (apply convert-section piece) output-port)
-      (display "}\n" output-port))))
+      (display "\\version \"2.22.0\"\n" output-port)
+      (display "\\score {\n << \n" output-port)
+      (display (apply string-append (map convert-voice piece)) output-port)
+      (display ">> \n \\layout {} \n}\n" output-port))))
 
-(convert-piece (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
-		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") ))
+(display (convert-piece (list (list "voice1") (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+			(list (list "voice2") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))))
 
-
-(define (convert-metadata measure)
-  (string-append
-   (convert-time (get-time measure))
-   (convert-key (get-key measure))
-   (convert-clef (get-clef measure))
-   "\n"
-  )
-  )
 
 (get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
 

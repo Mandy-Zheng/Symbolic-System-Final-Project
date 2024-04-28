@@ -2,7 +2,7 @@
 ;; Load logic for session environment
 (load "environment.scm")
 ;; generic add
-(load "add.scm")
+;;(load "add.scm")
 (load "parser.scm")
 
 ;; global vars for each session
@@ -182,9 +182,10 @@
 ; TODO: get-number-measures-in-section
 
 ;;; TESTING UI
-
+;;(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))))
 
 ; TODO: can we try to eliminate "" by storing away note names?
+(add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
 
 (start-composing 'nhung)
 (get-all-pieces!)
@@ -215,3 +216,70 @@
 (delete! 0)
 
 
+(define (edit-metadata-time time measure-start measure-end measure-list)
+  (let ((measure-list measure-list #|(get-current-voice|#)
+	(start-idx (- measure-start 1))
+	(end-idx (- measure-end 1))
+	(edit-length (+ (- measure-end measure-start) 1))
+	)
+    (let ((edit (list-head (list-tail measure-list start-idx) edit-length))
+	  (front (list-head measure-list start-idx))
+	  (end (list-tail measure-list measure-end))
+	  )
+      (print (length edit))
+      ;;set voice to 
+      (append front (map (lambda (measure) (list (list time (get-key measure) (get-clef measure)) (cdr measure))) edit) end)
+    )
+  )
+  )
+
+(define (edit-metadata-key key measure-start measure-end measure-list)
+  (let ((measure-list measure-list #|(get-current-voice|#)
+	(start-idx (- measure-start 1))
+	(end-idx (- measure-end 1))
+	(edit-length (+ (- measure-end measure-start) 1))
+	)
+    (let ((edit (list-head (list-tail measure-list start-idx) edit-length))
+	  (front (list-head measure-list start-idx))
+	  (end (list-tail measure-list measure-end))
+	  )
+   
+      ;;set voice to 
+      (append front (map (lambda (measure) (list (list (get-time measure) key (get-clef measure)) (cdr measure))) edit) end)
+    )
+  )
+  )
+
+(define (edit-metadata-clef clef measure-start measure-end measure-list)
+  (let ((measure-list measure-list #|(get-current-voice|#)
+	(start-idx (- measure-start 1))
+	(end-idx (- measure-end 1))
+	(edit-length (+ (- measure-end measure-start) 1))
+	)
+    (let ((edit (list-head (list-tail measure-list start-idx) edit-length))
+	  (front (list-head measure-list start-idx))
+	  (end (list-tail measure-list measure-end))
+	  )
+      (print (length edit))
+      ;;set voice to 
+      (append front (map (lambda (measure) (list (list (get-time measure) (get-key measure) clef) (cdr measure))) edit) end)
+    )
+  )
+)
+
+
+(edit-metadata-clef "treble" 2 3 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     ))
+
+(edit-metadata-key (list "E" "minor")  1 4 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     ))
