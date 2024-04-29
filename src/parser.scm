@@ -1,3 +1,5 @@
+; (load "boilerplate.scm")
+
 (define (print . args)
   (let lp ((statement args))
     (if (not (= (length statement) 0))

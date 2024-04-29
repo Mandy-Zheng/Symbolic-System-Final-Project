@@ -2,7 +2,6 @@
 ;; Load logic for session environment
 (load "environment.scm")
 ;; generic add
-;;(load "add.scm")
 (load "parser.scm")
 (load "converter.scm")
 
@@ -232,7 +231,7 @@
 ;(define (show-pdf!)
   
 
-;;; testing UI
+;;; TESTING UI
 (start-composing 'nhung)
 (get-all-pieces-names!)
 (define-new-piece! 'twinkle)

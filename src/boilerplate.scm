@@ -1,11 +1,4 @@
-
-
-
-
-
-
-
-;; Returns whether the expression contains at least one incidence of "|".
+; Returns whether the expression contains at least one incidence of "|".
 (define (contains-bar expr)
   (if (= (length expr) 0)
     #f
@@ -21,16 +14,6 @@
 (contains-bar '("G#2" "2")) ; #f
 (contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
 |#
-
-
-; Add by parsing
-; TODO: combine with add! above
-; TODO: catch error if malformed? so it doesn't try to apply?
-(define (add-parse expr)
-  (cond
-    ((and (string? (first expr)) (note? expr)) expr) ; just return the note list (no flattening)
-    ((contains-bar expr) expr) ; section (contains at least one "|")
-    (else (list (car expr) (cdr expr))))) ; measure
 
 
 ; Separate a list into sublists by "|"
@@ -51,28 +34,56 @@
 (separate-by-measure '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2")))
 |#
 
-; TODO: don't need to add notes
-
-; measure, section, add, insert, delete
-
+; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
+; by making them uppercase.
+(define (fix-case string-unit)
+    (if
+        (pitch? (string-upcase string-unit))
+        (string-upcase string-unit)
+        string-unit))
 
 #|
-(note? (add-parse '("G#2" "2"))) ; #t
-(note? (add-parse '("G#2" "B2" "2"))) ; #t
-(measure? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t (note the simpler syntax with fewer parentheses)
-
-; note the simpler syntax with fewer parentheses and no metadata for second measure
-(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
-(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+(fix-case "a#2") ; -> "A#2"
+(fix-case "meta") ; -> "meta"
+(fix-case "G3") ; -> "G3"
 |#
 
-; TODO (fix section? with meta)
-; (internal rep of section is just nested lists -- easier to deal with!)
-; TODO: get-section-meta
-; TODO: get-number-measures-in-section
+; Converts all of the symbols and numbers in the expression to strings.
+(define (stringify-terms expr)
+  (cond
+    ((symbol? expr)
+        (fix-case (symbol->string expr)))
+    ((number? expr)
+        (number->string expr))
+    ((pair? expr)
+        (map stringify-terms expr))
+    (else expr)))
 
-;;; TESTING UI
-;;(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))))
+#|
+(stringify-terms '(a#2 b3 1)) ; -> ("A#2" "B3" "1")
+(stringify-terms '(a#2 (1/3 c1) d4)) ; -> ("A#2" ("1/3" "C1") "D4")
+(stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
+|#
 
-; TODO: can we try to eliminate "" by storing away note names?
-(add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
+(define (parse expr)
+    (let ((string-expr (stringify-terms expr)))
+        (cond
+            ((and (string? (first string-expr)) (note? string-expr)) string-expr) ; just return the note list (no flattening)
+            ((contains-bar string-expr) string-expr) ; section (contains at least one "|")
+            (else (list (car string-expr) (cdr string-expr)))))) ; measure
+
+
+; TODO: catch error if malformed? so it doesn't try to apply?
+; TODO: move parse to user-interface when done
+; TODO (fix section? with meta) [or maybe not? internal rep of section is just nested lists -- easier to deal with!]
+
+; should work for: measure, section, add, insert, delete
+
+; note no quotes!
+#|
+(measure? (parse '((test 1) (G#2 2) (A2 1) (B2 1))))
+
+; note the simpler syntax with fewer parentheses and no metadata for second measure
+(section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
+(section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+|#
