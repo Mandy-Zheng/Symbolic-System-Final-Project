@@ -44,7 +44,7 @@
 
 #|
 (fix-case "a#2") ; -> "A#2"
-(fix-case "meta") ; -> "meta"
+(fix-case "test") ; -> "test"
 (fix-case "G3") ; -> "G3"
 |#
 
@@ -65,6 +65,8 @@
 (stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
 |#
 
+; Parses the expression into our music data types
+; The main entry point for user input
 (define (parse expr)
     (let ((string-expr (stringify-terms expr)))
         (cond
@@ -79,8 +81,9 @@
 
 ; should work for: measure, section, add, insert, delete
 
-; note no quotes!
 #|
+; note no quotes!
+(measure? (parse '((test 1) (G#2 2) (A2 1))))
 (measure? (parse '((test 1) (G#2 2) (A2 1) (B2 1))))
 
 ; note the simpler syntax with fewer parentheses and no metadata for second measure

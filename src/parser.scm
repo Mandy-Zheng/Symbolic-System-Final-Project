@@ -250,26 +250,45 @@ Return true if at least two notes and meta, else false.
 |#
 
 #|
-A section predicate, at least two measures as arguments.
-Has 1 meta and a list of measures.
-Return true if at least two measures and meta, else false.
+A section predicate, at least one measure as arguments.
+Return true if at least one measure, else false.
 |#
 (define (section? expr)
-  (define (check-elements elts)
-    (if (null? elts) ;; empty
-	#t
-	(and (measure? (car elts)) (check-elements (cdr elts)))))
-  (if (and (meta-info? (car expr))
-	   (not (measure? (car expr)))) ;; has meta
-      (and (<= 2 (length (cadr expr))) ;; at least two measures
-	   (check-elements (cadr expr)))
-      #f))
+	(define (check-elements elts)
+    	(if (null? elts) ;; empty
+		#t
+		(and (measure? (car elts)) (check-elements (cdr elts)))))
+	(and (<= 1 (length expr)) ;; at least two measures
+	   (check-elements expr)))
 #|
 
+(section? (list (list
+					(list "test" 1) ; meta
+					(list
+						(list "A#4" "Bb3" "2")
+						(list "G#2" "Bb1" "2"))))) ; -> #t
 
-; (add (meta-info ...) (A#4 Bb3 2) (G#2 Bb1 2) | (A#4 Bb3 2) (G#2 Bb1 2) |)
+(section? (list (list
+					(list "test" 1) ; meta
+					(list
+						(list "A#4" "Bb3" "2")
+						(list "G#2" "Bb1" "2")))
+				(list
+					(list "test" 1) ; meta
+					(list
+						(list "A#4" "Bb3" "2")
+						(list "G#2" "Bb1" "2"))))) ; -> #t
 
-; only meta-info for measure and section
+; malformed measure
+(section? (list (list
+					(list
+						(list "A#4" "Bb3" "2")
+						(list "G#2" "Bb1" "2"))))) ; -> #f
+
+; malformed measure
+(section? (list (list
+					(list "test" 1) ; meta
+					(list (list "G#2" "Bb1" "2"))))) ; -> #f
 
 
 |#
