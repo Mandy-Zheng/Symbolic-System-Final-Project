@@ -17,21 +17,34 @@
 
 
 ; Separate a list into sublists by "|"
-; Elements can themselves be lists
-(define (separate-by-measure lst)
-  (define (helper lst acc)
-    (cond ((null? lst) (reverse acc))
-          ((and (pair? (car lst)) (not (null? (car lst)))) ; check if empty
-           (helper (cdr lst) (cons (separate-by-measure (car lst)) acc)))
-          ((and (string? (car lst)) (string=? (car lst) "|")) (helper (cdr lst) (cons '() acc)))
-          (else (helper (cdr lst) (cons (cons (car lst) (car acc)) (cdr acc))))))
-  (helper lst (list '())))
-
+; Elements can themselves be lists or strings
+(define (separate-by-measure string-expr)
+  (define (helper lst acc current)
+    (cond ((null? lst)
+            (if (not (null? current)) ; "|" at the end of the section
+                (reverse (cons (reverse current) acc))
+                (reverse acc)))
+          ((and
+                (string? (car lst))
+                (equal? (car lst) "|"))
+            (helper
+                (cdr lst)
+                (cons (reverse current) acc)
+                '()))
+          (else
+            (helper
+                (cdr lst)
+                acc
+                (cons (car lst)
+                current)))))
+  (helper string-expr '() '()))
 
 #|
-(separate-by-measure '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" 1) ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
-(separate-by-measure '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))
-(separate-by-measure '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("test" "2") ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("test" "2") ("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
 |#
 
 ; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
@@ -65,14 +78,28 @@
 (stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
 |#
 
+; TODO
+; Assign each measure with its proper metadata.
+
+; Case 1 - M1 notes | notes | ...
+; Case 2 – M1 notes | notes | M2 notes | notes
+; Case 3 – notes | notes | ...
+; Look at metadata from last measure
+
+(define (propagate-metadata string-expr))
+
 ; Parses the expression into our music data types
 ; The main entry point for user input
 (define (parse expr)
     (let ((string-expr (stringify-terms expr)))
         (cond
-            ((and (string? (first string-expr)) (note? string-expr)) string-expr) ; just return the note list (no flattening)
-            ((contains-bar string-expr) string-expr) ; section (contains at least one "|")
-            (else (list (car string-expr) (cdr string-expr)))))) ; measure
+            ((and
+                (string? (first string-expr))
+                (note? string-expr))
+                string-expr) ; note (no further processing)
+            ((contains-bar string-expr)
+                (propagate-metadata (separate-by-measure string-expr))) ; section (contains at least one "|")
+            (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
 
 
 ; TODO: catch error if malformed? so it doesn't try to apply?
@@ -81,12 +108,16 @@
 
 ; should work for: measure, section, add, insert, delete
 
+; TODO: | (no quotes) is not a valid Scheme symbol name
+; we use "|" for now but we could change the character?
+
 #|
 ; note no quotes!
 (measure? (parse '((test 1) (G#2 2) (A2 1))))
 (measure? (parse '((test 1) (G#2 2) (A2 1) (B2 1))))
 
-; note the simpler syntax with fewer parentheses and no metadata for second measure
+(section? (parse '((test 1) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))
+
 (section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
 (section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
 |#

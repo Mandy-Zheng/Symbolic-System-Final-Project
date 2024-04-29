@@ -212,6 +212,7 @@ Get a list of notes from the measure
 
 |#
 
+
 #|
 A measure predicate, at least two notes as arguments.
 Has 1 meta and a list of notes.
@@ -227,6 +228,8 @@ Return true if at least two notes and meta, else false.
       (and (<= 2 (length (cadr expr))) ;; at least two notes
 	   (check-elements (cadr expr)))
       #f))
+
+
 #|
 (measure? (list
 	   (list "test" 1) ; meta
