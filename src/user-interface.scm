@@ -83,7 +83,7 @@
 
 ;; without the voice name
 (define (get-current-voice-measures)
-  (cdr (get-current-voice-body)))
+  (cadr (get-current-voice-body)))
 
 ;; Return the measure at index i of the current-voice
 (define (get-measure-at-index i)
@@ -95,12 +95,12 @@
   (set-variable-value! current-piece-name new-body session-environment))
 
 ;; save the new voice body in the current piece
-(define (save-voice new-voice-content)
-  ;; call save-body with the new full body
+(define (save-voice new-voice-body)
+  ;; call save-body with the new full content
   (let ((current-body (get-current-piece-body))) ; full body
     (save-body (map (lambda (voice index)
 		      (if (= index current-voice-index)
-			  new-voice-content ; replace with new voice
+			  (list current-voice-name new-voice-body) ;replace with new voice
 			  voice))
 		    current-body (iota (length current-body))))))
 
@@ -128,7 +128,7 @@
 			           (list
 				    (string-append "Measure-" (number->string index))
 				    measure))
-				 (cdr voice-body) (iota (length (cdr voice-body)))))))))
+				 (cadr voice-body) (iota (length (cadr voice-body)))))))))
 
 ;; display full piece body
 (define (get-current-piece!)
@@ -144,7 +144,7 @@
 				       (list
 					(string-append "Measure-" (number->string index))
 					measure))
-				     (cdr voice) (iota (length (cdr voice))))))
+				     (cadr voice) (iota (length (cadr voice))))))
 			    (display-message (list "Voice" (car voice)))
 			    (if (null? all-measures)
 				(display-message (list "No measure added yet."))
@@ -165,7 +165,7 @@
   (set! current-voice-name voice-name)
   ;; append new voice to body
   (let ((piece-body (get-current-piece-body)))
-    (save-body (append! piece-body (list (list voice-name)))))
+    (save-body (append! piece-body (list (list voice-name (list  ))))))
   (update-current-voice-index)
   (display-message (list "You're now starting voice" voice-name
 			 "at index:" current-voice-index))
@@ -178,13 +178,11 @@
 ;; Can only add by measure and section.
 (define (add! . expr)
   (let ((new-additions expr) ; TODO use parse 
-	(voice-body (get-current-voice-body)))
+	(voice-body (get-current-voice-measures)))
     (if (measure? expr)
 	(save-voice (append! voice-body (list new-additions))) ; keep measure as 1 list
 	(save-voice (append! voice-body new-additions))) ; like extend   
     (get-current-voice-piece!)))
-
-
 
 
 ;; Insert by splitting two portion. Helper for insert!.
@@ -193,15 +191,16 @@
       (cons element lst) ; add to end
       (cons (car lst)    ; add to front
             (insert-at (- index 1) element (cdr lst))))) 
+
 #|
 (define my-list '(1 2 3 4 5))
 (display (insert-at 2 100 my-list))
 |#
 
 (define (insert! insert-i new-measure)
-  (let ((current-body (get-current-piece-body)))
-    (save-body (insert-at insert-i new-measure current-body)))
-  (get-current-body!))
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (insert-at insert-i new-measure current-body)))
+  (get-current-voice-piece!))
 
 
 (define (delete-by-index index lst)
@@ -215,9 +214,13 @@
 
 ;; Given the index of the measure, delete the measure.
 (define (delete! delete-i)
-  (let ((current-body (get-current-piece-body)))
-    (save-body (delete-by-index delete-i current-body)))
-  (get-current-body!))  
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (delete-by-index delete-i current-body)))
+  (get-current-voice-piece!))  
+
+
+
+
 
 ;; Returns whether the expression contains at least one incidence of "|".
 (define (contains-bar expr)
@@ -292,13 +295,19 @@
 
 
 (insert! 1 (list
-	  (list "test-meta 3" 2) ; meta
+	  (list "test-meta new insert at 1" 2) ; meta
 	  (list (list "A#4" "Bb3" "2")
 		(list "G#2" "Bb1" "2"))))
 
 
 (delete! 1)
 (delete! 0)
+
+
+
+
+
+
 
 
 (define (edit-metadata-time time measure-start measure-end measure-list)
