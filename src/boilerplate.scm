@@ -16,37 +16,6 @@
 |#
 
 
-; Separate a list into sublists by "|"
-; Elements can themselves be lists or strings
-(define (separate-by-measure string-expr)
-  (define (helper lst acc current)
-    (cond ((null? lst)
-            (if (not (null? current)) ; "|" at the end of the section
-                (reverse (cons (reverse current) acc))
-                (reverse acc)))
-          ((and
-                (string? (car lst))
-                (equal? (car lst) "|"))
-            (helper
-                (cdr lst)
-                (cons (reverse current) acc)
-                '()))
-          (else
-            (helper
-                (cdr lst)
-                acc
-                (cons (car lst)
-                current)))))
-  (helper string-expr '() '()))
-
-#|
-(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
-(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
-(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
-(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("test" "2") ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("test" "2") ("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
-(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
-|#
-
 ; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
 ; by making them uppercase.
 (define (fix-case string-unit)
@@ -78,6 +47,61 @@
 (stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
 |#
 
+
+; Separate a list into sublists by "|"
+; Elements can themselves be lists or strings
+(define (separate-by-measure string-expr)
+  (define (helper lst acc current)
+    (cond ((null? lst)
+            (if (not (null? current)) ; "|" at the end of the section
+                (reverse (cons (reverse current) acc))
+                (reverse acc)))
+          ((and
+                (string? (car lst))
+                (equal? (car lst) "|"))
+            (helper
+                (cdr lst)
+                (cons (reverse current) acc)
+                '()))
+          (else
+            (helper
+                (cdr lst)
+                acc
+                (cons (car lst)
+                current)))))
+  (helper string-expr '() '()))
+
+#|
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("test" "2") ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("test" "2") ("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
+|#
+
+; Separate by measures with metadata -- this collects
+; all measures will the same metadata in one list.
+
+; If there is no metadata in the entire expression, then
+; return a single list with the metadata from the last measure
+; of the current piece prepended to it. (TODO: this is fake metadata for now)
+(define (separate-by-metadata string-expr)
+    (define (helper lst acc current)
+        (cond ((null? lst)
+                (reverse (cons (reverse current) acc)))
+            ((meta-info? (car lst))
+                (helper
+                    (cdr lst)
+                    (cons (reverse current) acc)
+                    '()))
+            (else
+                (helper
+                    (cdr lst)
+                    acc
+                    (cons (car lst)
+                    current)))))
+  (helper string-expr '() '()))
+
 ; TODO
 ; Assign each measure with its proper metadata.
 
@@ -85,8 +109,17 @@
 ; Case 2 – M1 notes | notes | M2 notes | notes
 ; Case 3 – notes | notes | ...
 ; Look at metadata from last measure
+(define (propagate-metadata string-expr)
+    (if
+        (measure? (first string-expr))
+        ()
+        ()))
 
-(define (propagate-metadata string-expr))
+; Applies a series of transformations to properly process a section expression (tested with parse below).
+(define (process-section string-expr)
+    (propagate-metadata
+        (separate-by-metadata
+            (separate-by-measure string-expr))))
 
 ; Parses the expression into our music data types
 ; The main entry point for user input
@@ -98,13 +131,12 @@
                 (note? string-expr))
                 string-expr) ; note (no further processing)
             ((contains-bar string-expr)
-                (propagate-metadata (separate-by-measure string-expr))) ; section (contains at least one "|")
+                (process-section string-expr)) ; section (contains at least one "|")
             (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
 
 
 ; TODO: catch error if malformed? so it doesn't try to apply?
 ; TODO: move parse to user-interface when done
-; TODO (fix section? with meta) [or maybe not? internal rep of section is just nested lists -- easier to deal with!]
 
 ; should work for: measure, section, add, insert, delete
 
@@ -116,6 +148,7 @@
 (measure? (parse '((test 1) (G#2 2) (A2 1))))
 (measure? (parse '((test 1) (G#2 2) (A2 1) (B2 1))))
 
+; TODO -- two test cases for each case of section with measure propagation
 (section? (parse '((test 1) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))
 
 (section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
