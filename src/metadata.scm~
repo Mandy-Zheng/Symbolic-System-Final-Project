@@ -1,8 +1,0 @@
-(define (clef? clef)
-  (member clef (list "treble" "bass" "alto" "tenor" "percussion")))
-
-(define (time-signature? time)
-  (and (= 3 (string-length time)) (string->number (string-ref time 0)) (string->number (string-ref time 2) (string=? (string-ref time 1) "/"))))
-
-
-(string->number "a")
