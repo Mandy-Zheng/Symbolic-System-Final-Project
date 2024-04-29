@@ -278,11 +278,12 @@
 ;; TODO fix it
 ;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
-  (convert-piece (get-current-piece-body)))
+  (apply convert-piece (get-current-piece-body)))
 
 
 (get-current-piece-body)
 
+(get-current-piece-body)
 
 
 
@@ -335,7 +336,7 @@
 ; TODO: can we try to eliminate "" by storing away note names?
 (add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
 
-
+#|
 ;;; testing UI
 (start-composing 'nhung)
 (get-all-pieces-names!)
@@ -408,6 +409,49 @@
 (define-new-voice! 'one)
 (switch-piece! 'twinkle1)
 (switch-piece! 'doesnotexist)
+(switch-piece! 'twinkle)
+|#
+
+
+;; test with real content
+(start-composing 'nhung)
+(define-new-piece! 'twinkle)   
+(define-new-voice! 'one)
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+
+(define-new-voice! 'two)
+
+(add! (list (list "4/4" (list "C" "major") "bass")
+	    (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") ))
+
+(add!  (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))
+
+
+
+(get-current-piece!)
+(get-current-piece-body)
+
+(apply convert-piece (get-current-piece-body))
+
+(show-pdf!)
+
+#|
+(define example (list
+  (list (list "voice1") (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+			(list (list "voice2") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))))
+
+
+(apply convert-piece example)
+|#
+
 
 
 (define (edit-metadata-time time measure-start measure-end measure-list)
