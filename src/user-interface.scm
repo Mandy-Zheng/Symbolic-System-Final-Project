@@ -183,7 +183,6 @@
 			 "at index:" current-voice-index))
   (get-current-piece!))
   
-
 ;; Can only add by measure and section.
 (define (add! . expr)
   (let ((new-additions expr) ; TODO use parse 
@@ -217,6 +216,15 @@
   (get-current-voice-piece!))  
 
 
+;; Given the index of the measure, replace it with the new one.
+(define (edit-measure! index new-measure)
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (map (lambda (measure i)
+		      (if (= index i)
+			  new-measure
+			  measure))
+		      current-body (iota (length current-body)))))
+  (get-current-voice-piece!))
 
 
 
@@ -328,7 +336,12 @@
 (get-current-voice-piece!)  
 (get-current-piece!)
 
+(edit-measure! 1 (list
+		  (list "new edit at 1" 2) ; meta
+		  (list (list "A#4" "Bb3" "2")
+			(list "G#2" "Bb1" "2"))))
 
+(get-current-piece!)
 
 
 
