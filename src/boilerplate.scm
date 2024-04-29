@@ -89,7 +89,7 @@
     (define (helper lst acc current)
         (cond ((null? lst)
                 (reverse (cons (reverse current) acc)))
-            ((meta-info? (car lst))
+            ((metadata? (car lst))
                 (helper
                     (cdr lst)
                     (cons (reverse current) acc)

@@ -182,11 +182,11 @@ Return true if the symbol follows this pattern, else false.
 (define (get-clef measure)
   (caddr (get-metadata measure)))
 
-;;TODO: should we make meta-info more specific? like key and time signature etc
+;;TODO: should we make metadata more specific? like key and time signature etc
 #|
-A meta-info predicate, all elements must be strings or number.
+A metadata predicate, all elements must be strings or number.
 |#
-(define (meta-info? expr)
+(define (metadata? expr)
   (pair? expr)
   (let lp ((expr expr))
     (if (null? expr)
@@ -194,8 +194,8 @@ A meta-info predicate, all elements must be strings or number.
 	(and (or (number? (car expr)) (string? (car expr)))
 	     (lp (cdr expr))))))
 #|
-(meta-info? (list "hello" 1)) ; #t
-(meta-info? (list "hello" 1 (list 1))) ; #f   
+(metadata? (list "hello" 1)) ; #t
+(metadata? (list "hello" 1 (list 1))) ; #f   
 |#
 
 #|
@@ -223,7 +223,7 @@ Return true if at least two notes and meta, else false.
     (if (null? elts) ;; empty
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
-  (if (and (meta-info? (car expr))
+  (if (and (metadata? (car expr))
 	   (not (note? (car expr)))) ;; has meta
       (and (<= 2 (length (cadr expr))) ;; at least two notes
 	   (check-elements (cadr expr)))
