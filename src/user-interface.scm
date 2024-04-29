@@ -15,8 +15,6 @@
 ;; FOR modify to use to get body, include all voices
 (define (get-current-piece-body)
   (if (null? current-piece-name)
-     ; (begin
-;	(display-message (list "No piece selected or defined at the moment"))
 	#f ;; don't do anything
         (lookup-variable-value current-piece-name session-environment)))
 
@@ -92,12 +90,19 @@
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
 
+;; this one save the full body of the piece
 (define (save-body new-body)
   (set-variable-value! current-piece-name new-body session-environment))
 
-;(define (save-voice
-
-
+;; save the new voice body in the current piece
+(define (save-voice new-voice-content)
+  ;; call save-body with the new full body
+  (let ((current-body (get-current-piece-body))) ; full body
+    (save-body (map (lambda (voice index)
+		      (if (= index current-voice-index)
+			  new-voice-content ; replace with new voice
+			  voice))
+		    current-body (iota (length current-body))))))
 
 ;;; Getter: display stuffs for users
 ;; Get the names of all current pieces.
@@ -141,7 +146,9 @@
 					measure))
 				     (cdr voice) (iota (length (cdr voice))))))
 			    (display-message (list "Voice" (car voice)))
-			    (display-measures (list all-measures))))
+			    (if (null? all-measures)
+				(display-message (list "No measure added yet."))
+				(display-measures all-measures))))
 		    body (iota (length body)))))))
 
 
@@ -170,12 +177,15 @@
 
 ;; Can only add by measure and section.
 (define (add! . expr)
-  (let ((new-additions expr) ; TODO use add generic
-	(body (get-current-piece-body)))
+  (let ((new-additions expr) ; TODO use parse 
+	(voice-body (get-current-voice-body)))
     (if (measure? expr)
-	(save-body (append! body (list new-additions))) ; keep measure as 1 list
-	(save-body (append! body new-additions))) ; like extend   
-    (get-current-body!)))
+	(save-voice (append! voice-body (list new-additions))) ; keep measure as 1 list
+	(save-voice (append! voice-body new-additions))) ; like extend   
+    (get-current-voice-piece!)))
+
+
+
 
 ;; Insert by splitting two portion. Helper for insert!.
 (define (insert-at index element lst)
@@ -263,16 +273,17 @@
 
 (define-new-voice! 'one)
 
-
 (get-all-pieces!)
 (get-current-piece!)
 
-
-
+;; test adding
 (add! (list
 	   (list "test" 1) ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
+
+(get-current-voice-piece!)
+
 
 (add! (list
 	   (list "test-meta 2" 2) ; meta
