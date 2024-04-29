@@ -270,14 +270,14 @@
 (add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
 
 
-#| testing UI
+;;; testing UI
 (start-composing 'nhung)
-(get-all-pieces!)
+(get-all-pieces-names!)
 (define-new-piece! 'twinkle)
 
 (define-new-voice! 'one)
 
-(get-all-pieces!)
+(get-all-pieces-names!)
 (get-current-piece!)
 
 
@@ -285,8 +285,6 @@
 	   (list "test" 1) ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
-
-(get-current-voice-piece!)
 
 
 (add! (list
@@ -330,7 +328,7 @@
 (get-current-voice-piece!)  
 (get-current-piece!)
 
-|#
+
 
 
 
