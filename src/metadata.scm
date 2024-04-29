@@ -7,7 +7,7 @@
 (clef? "trebel") ; -> #f
 |#
 
-; TODO: fix for 12/8 (length-4 string) [see below ]
+; TODO: fix for 12/8 (length-4 string) [see below]
 (define (time-signature? time)
   (and
     (= 3 (string-length time))
