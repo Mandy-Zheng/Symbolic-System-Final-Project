@@ -4,6 +4,7 @@
 ;; generic add
 ;;(load "add.scm")
 (load "parser.scm")
+(load "converter.scm")
 
 ;; global vars for each session
 (define current-piece-name)
@@ -225,6 +226,16 @@
 			  measure))
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
+
+
+;; Show pdf of the current piece, use converter from lilypond
+;(define (show-pdf!)
+  
+
+
+
+
+
 
 
 
