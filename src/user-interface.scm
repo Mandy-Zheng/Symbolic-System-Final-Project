@@ -12,11 +12,6 @@
 (define current-voice-name)
 (define current-voice-index) 
 
-;; FOR modify to use to get body, include all voices
-(define (get-current-piece-body)
-  (if (null? current-piece-name)
-	#f ;; don't do anything
-        (lookup-variable-value current-piece-name session-environment)))
 
 ;; Display welcome message, and make an empty environment
 (define (start-composing my-name)
@@ -24,6 +19,8 @@
   (set! session-environment (make-global-environment))
   (welcome-description))
 
+
+;; Display helper functions
 (define (display-message message)
   (if (pair? message)
       (begin
@@ -58,7 +55,7 @@
   (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
 
 
-;;; Helper functions
+;;; Helper functions for add, insert, delete
 (define (find-index-by-first-element list-of-lists name)
   (let loop ((lists list-of-lists)
              (index 0))
@@ -74,14 +71,23 @@
 	(let ((body (get-current-piece-body)))
 	  (set! current-voice-index
 		(find-index-by-first-element body current-voice-name))))))
-  
 
-;; with the voice name and list of measures
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Read From Environment ;;;  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Get the current piece's body, include all voices
+(define (get-current-piece-body)
+  (if (null? current-piece-name)
+	#f ;; don't do anything
+        (lookup-variable-value current-piece-name session-environment)))
+
+;; Get the current voice body with the voice name and list of measures
 (define (get-current-voice-body)
   (let ((body (get-current-piece-body)))
     (list-ref body current-voice-index)))
 
-;; without the voice name
+;; Get only the measures in the current voice
 (define (get-current-voice-measures)
   (cadr (get-current-voice-body)))
 
@@ -90,11 +96,15 @@
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
 
-;; this one save the full body of the piece
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Modify Environment ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Save the full body of the piece given the new body
 (define (save-body new-body)
   (set-variable-value! current-piece-name new-body session-environment))
 
-;; save the new voice body in the current piece
+;; Save the new voice body in the current piece
 (define (save-voice new-voice-body)
   ;; call save-body with the new full content
   (let ((current-body (get-current-piece-body))) ; full body
@@ -104,7 +114,10 @@
 			  voice))
 		    current-body (iota (length current-body))))))
 
-;;; Getter: display stuffs for users
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Getter/Commands for users: display stuffs for users ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Get the names of all current pieces.
 (define (get-all-pieces-names!)
   (let ((all-pieces (environment-variables session-environment)))
@@ -112,7 +125,6 @@
 	(display-message (list "You haven't written any piece."))
 	(display-message (list "All pieces: " (environment-variables
 					       session-environment))))))
-
 
 (define (get-current-piece-name!)
   (display-message (list "The current piece is:" current-piece-name)))
@@ -151,15 +163,15 @@
 				(display-measures all-measures))))
 		    body (iota (length body)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commands to compose ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;; Commands to compose
 (define (define-new-piece! piece-name)
   (define-variable! piece-name (list ) session-environment)
   (set! current-piece-name piece-name)
   (display-message (list "You're starting a new piece:" piece-name))
   (display-message (list "Please start by defining a voice for your first voice.")))
-
 
 (define (define-new-voice! voice-name)
   (set! current-voice-name voice-name)
@@ -172,9 +184,6 @@
   (get-current-piece!))
   
 
-
-;;; TODO
-
 ;; Can only add by measure and section.
 (define (add! . expr)
   (let ((new-additions expr) ; TODO use parse 
@@ -184,7 +193,6 @@
 	(save-voice (append! voice-body new-additions))) ; like extend   
     (get-current-voice-piece!)))
 
-
 ;; Insert by splitting two portion. Helper for insert!.
 (define (insert-at index element lst)
   (if (= index 0)
@@ -192,31 +200,22 @@
       (cons (car lst)    ; add to front
             (insert-at (- index 1) element (cdr lst))))) 
 
-#|
-(define my-list '(1 2 3 4 5))
-(display (insert-at 2 100 my-list))
-|#
-
 (define (insert! insert-i new-measure)
   (let ((current-body (get-current-voice-measures)))
     (save-voice (insert-at insert-i new-measure current-body)))
   (get-current-voice-piece!))
 
-
 (define (delete-by-index index lst)
   (cond ((null? lst) '())  ; empty
         ((= index 0) (cdr lst)) ; return the rest of the list
         (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
-#|
-(define my-list '(1 2 3 4 5))
-(display (delete-by-index 1 my-list)) ;(1 3 4 5)
-|#
 
 ;; Given the index of the measure, delete the measure.
 (define (delete! delete-i)
   (let ((current-body (get-current-voice-measures)))
     (save-voice (delete-by-index delete-i current-body)))
   (get-current-voice-piece!))  
+
 
 
 
@@ -270,6 +269,8 @@
 ; TODO: can we try to eliminate "" by storing away note names?
 (add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
 
+
+#| testing UI
 (start-composing 'nhung)
 (get-all-pieces!)
 (define-new-piece! 'twinkle)
@@ -279,7 +280,7 @@
 (get-all-pieces!)
 (get-current-piece!)
 
-;; test adding
+
 (add! (list
 	   (list "test" 1) ; meta
 	   (list (list "A#4" "Bb3" "2")
@@ -303,10 +304,33 @@
 (delete! 1)
 (delete! 0)
 
+(define-new-voice! 'two)
+
+(add! (list
+	   (list "test" 1) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
 
 
 
+(add! (list
+	   (list "test-meta 2" 2) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
 
+
+(insert! 1 (list
+	  (list "test-meta new insert at 1" 2) ; meta
+	  (list (list "A#4" "Bb3" "2")
+		(list "G#2" "Bb1" "2"))))
+
+
+(delete! 1)
+
+(get-current-voice-piece!)  
+(get-current-piece!)
+
+|#
 
 
 
