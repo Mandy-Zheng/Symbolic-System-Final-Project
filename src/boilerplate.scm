@@ -79,17 +79,21 @@
 (separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
 |#
 
-; Separate by measures with metadata -- this collects
-; all measures will the same metadata in one list.
-
+; TODO
 ; If there is no metadata in the entire expression, then
 ; return a single list with the metadata from the last measure
 ; of the current piece prepended to it. (TODO: this is fake metadata for now)
+
+
+; Separate by measures with metadata -- this collects
+; all measures will the same metadata in one list.
+
+; As soon as there is metadata in one of the sublists, create a new sublist.
 (define (separate-by-metadata string-expr)
     (define (helper lst acc current)
         (cond ((null? lst)
                 (reverse (cons (reverse current) acc)))
-            ((metadata? (car lst))
+            ((metadata? (first (first lst)))
                 (helper
                     (cdr lst)
                     (cons (reverse current) acc)
@@ -101,6 +105,177 @@
                     (cons (car lst)
                     current)))))
   (helper string-expr '() '()))
+
+
+
+;;;;
+
+; working with 1-3
+(define (separate-by-metadata string-expr)
+  (define (helper lst acc current)
+    ; current is a list of measures
+    ; acc is a list of list of measures
+    (cond ((null? lst)
+            (cond
+                ((and (null? current) (not (null? acc)))
+                    acc)
+                ((and (not (null? current)) (null? acc))
+                    (list (list current)))
+                ((and (not (null? current)) (not (null? acc)))
+                    (list (reverse (cons current acc)))))) ; done - test case 1
+          ((metadata? (caar lst))
+           (helper (cdr lst)
+                    (cond
+                        ((and (null? current) (null? acc))
+                            acc)
+                        ((and (null? current) (not (null? acc)))
+                            (list acc))
+                        ((and (not (null? current)) (null? acc)) ; test case 3?
+                            (list current))
+                        ((and (not (null? current)) (not (null? acc)))  ; done - test case 2
+                            (cons current acc)))                  
+                   (car lst))) ; this should be a list -> maybe change to (list (car lst))
+          (else
+           (helper (cdr lst)
+                   acc
+                   (cond
+                    ((and (null? current) (not (null? acc)))
+                        (cons (car lst) current))
+                    ((and (not (null? current)) (null? acc))
+                        (cons (car lst) current))
+                    ((and (not (null? current)) (not (null? acc)))
+                        (cons (car lst) current)))))))
+  (helper string-expr '() '()))
+
+
+;;;;
+; current below (passes all except 2 and 3)
+
+(define (separate-by-metadata string-expr)
+  (define (helper lst acc current)
+    ; lst is a list of measures, each with or without metadata (invariant)
+    ; acc is a list of list of measures, each with or without metadata (invariant)
+    ; current is a list of measures, each with or without metadata (invariant)
+    (cond ((null? lst) 
+            (cond
+                ((and (null? current) (not (null? acc)))
+                    acc)
+                ((and (not (null? current)) (null? acc))
+                    (list (reverse current)))
+                ((and (not (null? current)) (not (null? acc)))
+                    (reverse (cons (reverse current) acc)))))
+          ((metadata? (caar lst))
+            (helper (cdr lst)
+                    (cond
+                        ((and (null? current) (null? acc))
+                            '())
+                        ((and (null? current) (not (null? acc))) ; maybe not possible?
+                            acc)
+                        ((and (not (null? current)) (null? acc))
+                            (list current))
+                        ((and (not (null? current)) (not (null? acc)))
+                            (cons (reverse current) acc)))                  
+                   (list (car lst))))
+          (else
+           (helper (cdr lst)
+                   acc
+                   (cond ; TODO: remove!
+                    ((and (null? current) (not (null? acc)))
+                        (cons (car lst) current))
+                    ((and (not (null? current)) (null? acc))
+                        (reverse (cons (car lst) current)))
+                    ((and (not (null? current)) (not (null? acc)))
+                        (cons (car lst) current)))))))
+  (helper string-expr '() '()))
+
+
+
+
+;;; below passes all except last
+(define (separate-by-metadata string-expr)
+  (define (helper lst acc current)
+    ; lst is a list of measures, each with or without metadata (invariant)
+    ; acc is a list of list of measures, each with or without metadata (invariant)
+    ; current is a list of measures, each with or without metadata (invariant)
+    (cond ((null? lst) 
+            (cond
+                ((and (null? current) (not (null? acc)))
+                    acc)
+                ((and (not (null? current)) (null? acc))
+                    (list (reverse current)))
+                ((and (not (null? current)) (not (null? acc)))
+                    (reverse (cons current acc)))))
+          ((metadata? (caar lst))
+            (helper (cdr lst)
+                    (cond
+                        ((and (null? current) (null? acc))
+                            '())
+                        ((and (null? current) (not (null? acc))) ; maybe not possible?
+                            acc)
+                        ((and (not (null? current)) (null? acc))
+                            (list current))
+                        ((and (not (null? current)) (not (null? acc)))
+                            (cons (reverse current) acc)))                  
+                   (list (car lst))))
+          (else
+           (helper (cdr lst)
+                   acc
+                   (cond ; TODO: remove!
+                    ((and (null? current) (not (null? acc)))
+                        (cons (car lst) current))
+                    ((and (not (null? current)) (null? acc))
+                        (cons (car lst) current))
+                    ((and (not (null? current)) (not (null? acc)))
+                        (cons (car lst) current)))))))
+  (helper string-expr '() '()))
+
+
+; simpler version, does not pass 2 and 3
+(define (separate-by-metadata string-expr)
+  (define (helper lst acc current)
+    (cond ((null? lst) 
+           (if (not (null? current))
+               (reverse (cons (reverse current) acc))
+               acc))
+          ((metadata? (caar lst))
+           (helper (cdr lst)
+                   (if (not (null? current))
+                       (cons (reverse current) acc)
+                       acc)
+                   (list (car lst))))
+          (else
+           (helper (cdr lst)
+                   acc
+                   (cons (car lst) current)))))
+  (helper string-expr '() '()))
+
+#|
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t     
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t  
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+|#
+
 
 ; TODO
 ; Assign each measure with its proper metadata.

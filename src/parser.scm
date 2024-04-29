@@ -172,31 +172,6 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
 |#
 
-(define (get-metadata measure)
-  (car measure))
-
-(define (get-time measure)
-  (car (get-metadata measure)))
-(define (get-key measure)
-  (cadr (get-metadata measure)))
-(define (get-clef measure)
-  (caddr (get-metadata measure)))
-
-;;TODO: should we make metadata more specific? like key and time signature etc
-#|
-A metadata predicate, all elements must be strings or number.
-|#
-(define (metadata? expr)
-  (pair? expr)
-  (let lp ((expr expr))
-    (if (null? expr)
-	#t
-	(and (or (number? (car expr)) (string? (car expr)))
-	     (lp (cdr expr))))))
-#|
-(metadata? (list "hello" 1)) ; #t
-(metadata? (list "hello" 1 (list 1))) ; #f   
-|#
 
 #|
 Get a list of notes from the measure
@@ -213,6 +188,7 @@ Get a list of notes from the measure
 |#
 
 
+; TODO: check with new metadata predicate
 #|
 A measure predicate, at least two notes as arguments.
 Has 1 meta and a list of notes.
@@ -229,6 +205,7 @@ Return true if at least two notes and meta, else false.
 	   (check-elements (cadr expr)))
       #f))
 
+; TODO: update these test cases
 
 #|
 (measure? (list
