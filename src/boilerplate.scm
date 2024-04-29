@@ -1,3 +1,5 @@
+(load "src/parser.scm")
+
 ; Returns whether the expression contains at least one incidence of "|".
 (define (contains-bar expr)
   (if (= (length expr) 0)
@@ -20,7 +22,7 @@
 ; by making them uppercase.
 (define (fix-case string-unit)
     (if
-        (pitch? (string-upcase string-unit))
+        (or (pitch? (string-upcase string-unit)) (pitch? (string-append (string-upcase string-unit) "4"))) ; TODO: hacky fix
         (string-upcase string-unit)
         string-unit))
 
@@ -140,13 +142,15 @@
 
 ; Case 1 - M1 notes | notes | ...
 ; Case 2 – M1 notes | notes | M2 notes | notes
-; Case 3 – notes | notes | ...
+; Case 3 – notes | notes | ... [TODO]
 ; Look at metadata from last measure
 (define (propagate-metadata string-expr)
     (if
         (measure? (first string-expr))
         ()
         ()))
+
+(define (propagate-metadata string-expr) string-expr)
 
 ; Applies a series of transformations to properly process a section expression (tested with parse below).
 (define (process-section string-expr)
@@ -178,12 +182,12 @@
 
 #|
 ; note no quotes!
-(measure? (parse '((test 1) (G#2 2) (A2 1))))
-(measure? (parse '((test 1) (G#2 2) (A2 1) (B2 1))))
+(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
+(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 
 ; TODO -- two test cases for each case of section with measure propagation
-(section? (parse '((test 1) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
 
-(section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
-(section? (parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
+(section? (parse '((3/4 (F major) bass) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; -> #t (TODO)
+(section? (parse '((3/4 (F major) bass) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; -> #t (TODO)
 |#
