@@ -75,6 +75,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (get-all-pieces-names)
+ (environment-variables session-environment)) 
 
 ;; Get the current piece's body, include all voices
 (define (get-current-piece-body)
@@ -114,20 +116,32 @@
 			  voice))
 		    current-body (iota (length current-body))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Modidy Global vars ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; reset  current-voice-name and index because piece was changed
+(define (reset-voice-vars)
+  (set! current-voice-name '())
+  (set! current-voice-index '()))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Getter/Commands for users: display stuffs for users ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Get the names of all current pieces.
 (define (get-all-pieces-names!)
-  (let ((all-pieces (environment-variables session-environment)))
+  (let ((all-pieces (get-all-pieces-names)))
     (if (null? all-pieces)
 	(display-message (list "You haven't written any piece."))
 	(display-message (list "All pieces: " (environment-variables
-					       session-environment))))))
+					       session-environment)))))
+  'done)
 
 (define (get-current-piece-name!)
-  (display-message (list "The current piece is:" current-piece-name)))
+  (display-message (list "The current piece is:" current-piece-name))
+  'done)
 
 ;; display full voice body
 (define (get-current-voice-piece!)
@@ -140,7 +154,8 @@
 			           (list
 				    (string-append "Measure-" (number->string index))
 				    measure))
-				 (cadr voice-body) (iota (length (cadr voice-body)))))))))
+				 (cadr voice-body) (iota (length (cadr voice-body))))))))
+  'done)
 
 ;; display full piece body
 (define (get-current-piece!)
@@ -161,7 +176,9 @@
 			    (if (null? all-measures)
 				(display-message (list "No measure added yet."))
 				(display-measures all-measures))))
-		    body (iota (length body)))))))
+		    body (iota (length body))))))
+  'done)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Commands to compose ;;;
@@ -226,12 +243,48 @@
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
+(define (switch-voice! new-voice)
+  (let ((new-voice-i (find-index-by-first-element (get-current-piece-body) new-voice)))
+    (if new-voice-i
+	(begin
+	  (set! current-voice-name new-voice)
+	  (set! current-voice-index new-voice-i)
+	  (display-message (list "You're currently working on voice" new-voice))
+	  (get-current-voice-piece!))
+	(begin
+	  (display-message (list "The system cannot find" new-voice "in the current piece."
+				 "Please make sure you spell the name correctly."))
+	  (get-current-piece!))))
+  'done)
 
-;; Show pdf of the current piece, use converter from lilypond
-;(define (show-pdf!)
-  
+(define (switch-piece! new-piece-name)
+  (let ((all-pieces-names (get-all-pieces-names)))
+    (if (member new-piece-name all-pieces-names)
+	(begin
+	  (set! current-piece-name new-piece-name)
+	  (reset-voice-vars)
+	  (display-message (list "You're currently working on piece" new-piece-name))
+	  (get-current-piece!)
+	  (display-message (list "Please start by selecting a voice to start editing.")))
+	(begin
+	  (display-message (list "The system cannot find" new-piece-name
+				 "in the environment."))
+	  (get-all-pieces-names!))))
+  'done)
+
 
 ;;; TESTING UI
+
+;; TODO fix it
+;; Show pdf of the current piece, use converter from lilypond
+(define (show-pdf!)
+  (apply convert-piece (get-current-piece-body)))
+
+
+(get-current-piece-body)
+
+(get-current-piece-body)
+
 (start-composing 'nhung)
 (get-all-pieces-names!)
 (define-new-piece! 'twinkle)
@@ -295,6 +348,56 @@
 			(list "G#2" "Bb1" "2"))))
 
 (get-current-piece!)
+(switch-voice! 'one)
+(switch-voice! 'doesnotexist)
+
+
+(define-new-piece! 'twinkle1)
+(define-new-voice! 'one)
+(switch-piece! 'twinkle1)
+(switch-piece! 'doesnotexist)
+(switch-piece! 'twinkle)
+|#
+
+
+;; test with real content
+(start-composing 'nhung)
+(define-new-piece! 'twinkle)   
+(define-new-voice! 'one)
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+
+(define-new-voice! 'two)
+
+(add! (list (list "4/4" (list "C" "major") "bass")
+	    (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") ))
+
+(add!  (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))
+
+
+
+(get-current-piece!)
+(get-current-piece-body)
+
+(apply convert-piece (get-current-piece-body))
+
+(show-pdf!)
+
+#|
+(define example (list
+  (list (list "voice1") (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+			(list (list "voice2") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))))
+
+
+(apply convert-piece example)
+|#
 
 
 
