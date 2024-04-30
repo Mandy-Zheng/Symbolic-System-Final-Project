@@ -85,7 +85,7 @@
 ; Separate by measures with metadata -- this collects
 ; all measures will the same metadata in one list.
 
-; TODO (this edge case)
+; TODO (this edge case below)
 ; If there is no metadata in the entire expression, then
 ; return a single list with the metadata from the last measure
 ; of the current piece prepended to it. (TODO: this is fake metadata for now)
@@ -161,21 +161,15 @@
 ; -> #t
 |#
 
-
 ; metadata-splits is a list of lists of measures
-(define (flatten-section lst) (apply append lst)) ; keep in a separate procedure to properly use apply
+(define (flatten-section lst)
+    (map
+        (lambda (sublist)
+            (list (first sublist) (cdr sublist)))
+    (apply append lst))) ; keep in a separate procedure to properly use apply
 
 #|
-(equal?
-    (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
-    '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
-; -> #t
 (section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))))
-; -> #t
-
-(equal?
-    (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
-    '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
 ; -> #t
 (section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))))
 ; -> #t
@@ -206,12 +200,6 @@
                 (process-section string-expr)) ; section (contains at least one "|")
             (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
 
-
-; TODO: catch error if malformed? so it doesn't try to apply?
-; TODO: move parse to user-interface when done
-
-; should work for: measure, section, add, insert, delete
-
 ; TODO: | (no quotes) is not a valid Scheme symbol name
 ; we use "|" for now but we could change the character?
 
@@ -220,9 +208,14 @@
 (measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
 (measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 
-; TODO -- two test cases for each case of section with measure propagation
+; TODO
 (section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (C#2 2) (D3 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t
 
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t (TODO)
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t (TODO)
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" ((4/4 (G major) bass) (G#2 2) (A2 2))))) ; -> #t
+
+
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" ((4/4 (G major) bass) (G#2 2) (A2 2))))) ; -> #t
 |#

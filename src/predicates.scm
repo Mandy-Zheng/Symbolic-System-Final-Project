@@ -186,7 +186,6 @@ Get a list of notes from the measure
 |#
 
 
-; TODO: check with new metadata predicate
 #|
 A measure predicate, at least two notes as arguments.
 Has 1 meta and a list of notes.
@@ -197,13 +196,10 @@ Return true if at least two notes and meta, else false.
     (if (null? elts) ;; empty
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
-  (if (and (metadata? (car expr))
-	   (not (note? (car expr)))) ;; has meta
+  (if (metadata? (car expr))
       (and (<= 2 (length (cadr expr))) ;; at least two notes
 	   (check-elements (cadr expr)))
       #f))
-
-; TODO: update these test cases
 
 #|
 (measure? (list
