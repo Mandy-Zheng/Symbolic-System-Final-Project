@@ -207,13 +207,13 @@ Return true if at least two notes and meta, else false.
 
 #|
 (measure? (list
-	   (list "test" 1) ; meta
+	   (list "3/4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2")))) ;; #t
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "test" 1) ; meta
+	   (list "3/4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")))) ; #f
 
 ;; no meta with 1 note only		
@@ -318,6 +318,9 @@ Return true if at least one measure, else false.
 (key-signature? (list "C")) ; -> #f
 
 ; these are getters for measures, not metadata
+(define (get-metadata measure)
+  (car measure))
+
 (define (get-clef measure)
   (caar measure))
 
@@ -358,4 +361,3 @@ clef ::= treble | bass | alto | tenor | percussion
 (metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
 (metadata? (list "G#2" "A2)) ; -> #f
 |#
-

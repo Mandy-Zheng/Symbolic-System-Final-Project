@@ -92,7 +92,7 @@
 (define (separate-by-metadata string-expr)
   (define (helper lst acc current)
     ; lst is a list of measures, each with or without metadata (invariant)
-    ; acc is a list of list of measures, each with or without metadata (invariant)
+    ; acc is a list of lists of measures, each with or without metadata (invariant)
     ; current is a list of measures, each with or without metadata (invariant)
     (cond ((null? lst) 
            (if (not (null? current))
@@ -138,32 +138,60 @@
 |#
 
 
-; TODO
-; Assign each measure with its proper metadata.
-
+; Assign each measure with its proper metadata (tested below)
+; string-expr is a list of lists of measures, where each list's measure all have the same metadata
 ; Case 1 - M1 notes | notes | ...
 ; Case 2 – M1 notes | notes | M2 notes | notes
-; Case 3 – notes | notes | ... [TODO]
-; Look at metadata from last measure
+; Case 3 – notes | notes | ... [TODO] (look at metadata from last measure)
 (define (propagate-metadata string-expr)
-    (if
-        (measure? (first string-expr))
-        (cons (first string-expr) (map (lambda (measure) (cons (get-metadata (first string-expr)) measure)) (cdr string-expr))) ; propagate to all measures
-        #t))
+    (map (lambda (measure-list)
+        (let ((metadata (get-metadata (first measure-list))))
+            (cons (first measure-list)
+                (map (lambda (measure) (cons metadata measure)) (cdr measure-list)))))
+    string-expr)) ; assume first measure in each list has metadata
 
 #|
 (equal?
-    (propagate-metadata '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
-    '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
 ; -> #t
-
+(equal?
+    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))))
+    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
+; -> #t
 |#
 
-; Applies a series of transformations to properly process a section expression (tested with parse below).
+
+; metadata-splits is a list of lists of measures
+(define (flatten-section lst) (apply append lst)) ; keep in a separate procedure to properly use apply
+
+#|
+(equal?
+    (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+; -> #t
+(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+; -> #t
+
+(equal?
+    (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
+; -> #t
+(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+; -> #t
+|#
+
+
+; Applies a series of transformations to properly process a section expression.
 (define (process-section string-expr)
-    (propagate-metadata
-        (separate-by-metadata
-            (separate-by-measure string-expr))))
+    (flatten-section
+        (propagate-metadata
+            (separate-by-metadata
+                (separate-by-measure string-expr)))))
+
+#|
+(section? (process-section (stringify-terms '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))))
+|#
 
 ; Parses the expression into our music data types
 ; The main entry point for user input
