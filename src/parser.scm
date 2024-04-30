@@ -184,7 +184,7 @@
                 (separate-by-measure string-expr)))))
 
 #|
-(section? (process-section (stringify-terms '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))))
+(section? (process-section (stringify-terms '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))) ; more test cases below
 |#
 
 ; Parses the expression into our music data types
@@ -208,14 +208,11 @@
 (measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
 (measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 
-; TODO
 (section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
 (section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (C#2 2) (D3 1)))) ; -> #t
 (section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t
 
 (section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" ((4/4 (G major) bass) (G#2 2) (A2 2))))) ; -> #t
-
-
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" ((4/4 (G major) bass) (G#2 2) (A2 2))))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2) "|" (3/4 (A major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
 |#
