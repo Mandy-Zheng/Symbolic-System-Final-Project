@@ -1,277 +1,218 @@
-(define (print . args)
-  (let lp ((statement args))
-    (if (not (= (length statement) 0))
-	(begin (display (car statement))
-	(display "\n")
-	(lp (cdr statement)))))
-  )
+(load "src/predicates.scm")
 
-(define sharp "#")
-(define flat "b")
-(define double-sharp "##")
-(define double-flat "bb")
+; Returns whether the expression contains at least one incidence of "|".
+(define (contains-bar expr)
+  (if (= (length expr) 0)
+    #f
+    (or
+      (and (string? (first expr)) (string=? (first expr) "|"))
+      (contains-bar (cdr expr)))))
 
 #|
-An accidental predicate where it returns true if the symbol is '# or 'b.
-|#
-(define (accidentals? expr)
-  (or (string=? expr sharp)
-      (string=? expr flat))
-  )
-#|
-(accidentals? "#") ;#t
-(accidentals? "b") ;#t
-(accidentals? "##") ;#f
-(accidentals? "###") ;#f
+(contains-bar '("|")) ; #t
+(contains-bar '()) ; #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; #t
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; #t
+(contains-bar '("G#2" "2")) ; #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
 |#
 
-#|
-A double accidental predicate where it returns true if the symbol is '## or 'bb.
-|#
 
-(define (double-accidentals? expr)
-  (or (string=? expr double-sharp)
-      (string=? expr double-flat))
-  )
-#|
-(double-accidentals? "b") ; #f
-(double-accidentals? "bb") ; #t
-(double-accidentals? "##") ; #t
-(double-accidentals? "bbb") ;#f
-|#
+; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
+; by making them uppercase.
+(define (fix-case string-unit)
+    (if
+        (or (pitch? (string-upcase string-unit)) (pitch? (string-append (string-upcase string-unit) "4"))) ; TODO: hacky fix
+        (string-upcase string-unit)
+        string-unit))
 
 #|
-A letter predicate where it returns true if the symbol is a letter from A-G.
+(fix-case "a#2") ; -> "A#2"
+(fix-case "test") ; -> "test"
+(fix-case "G3") ; -> "G3"
 |#
-(define (letter? expr)
-  (member expr (list "A" "B" "C" "D" "E" "F" "G"))
-  )
+
+; Converts all of the symbols and numbers in the expression to strings.
+(define (stringify-terms expr)
+  (cond
+    ((symbol? expr)
+        (fix-case (symbol->string expr)))
+    ((number? expr)
+        (number->string expr))
+    ((pair? expr)
+        (map stringify-terms expr))
+    (else expr)))
 
 #|
-(letter? "A") ;("A" "B" "C" "D" "E" "F" "G")
-(letter? "a") ;#f
-(letter? "C") ; ("C" "D" "E" "F" "G")
-(letter? "Ab") ;#f
-(letter? "F") ;("F" "G")
-(letter? "G") ;("G")
+(stringify-terms '(a#2 b3 1)) ; -> ("A#2" "B3" "1")
+(stringify-terms '(a#2 (1/3 c1) d4)) ; -> ("A#2" ("1/3" "C1") "D4")
+(stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
 |#
 
-(define (get-letter pitch)
-  (substring pitch 0 1)
-  )
 
-(define (get-accidentals pitch)
-  (cond ((and (> (string-length pitch) 2) (double-accidentals? (substring pitch 1 3))) (substring pitch 1 3))
-	((accidentals? (substring pitch 1 2)) (substring pitch 1 2))
-	(else ""))
-  )
+; Separate a list into sublists by "|"
+; Elements can themselves be lists or strings
+(define (separate-by-measure string-expr)
+  (define (helper lst acc current)
+    (cond ((null? lst)
+            (if (not (null? current)) ; "|" at the end of the section
+                (reverse (cons (reverse current) acc))
+                (reverse acc)))
+          ((and
+                (string? (car lst))
+                (equal? (car lst) "|"))
+            (helper
+                (cdr lst)
+                (cons (reverse current) acc)
+                '()))
+          (else
+            (helper
+                (cdr lst)
+                acc
+                (cons (car lst)
+                current)))))
+  (helper string-expr '() '()))
 
-(define (get-octave pitch)
-  (let ((start-idx (+ (string-length (get-letter pitch)) (string-length (get-accidentals pitch)))))
-    (substring pitch start-idx (string-length pitch))
-    )
-  )
+; TODO: fix these test cases with actual metadata
 #|
-(get-letter "A#3") ; A
-(get-accidentals "A#3") ; #
-(get-octave "A#3") ; 3
-
-(get-letter "G2") ; G
-(get-accidentals "G2") ; ''
-(get-octave "G2") ; 2
-
-(get-letter "Fbb10") ; F
-(get-accidentals "Fbb10") ; bb
-(get-octave "Fbb10") ; 10
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("test" "2") ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("test" "2") ("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
+(separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|" ("test" "3") ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("test" "3") ("G#2" "2") ("A2" "1")))
 |#
 
-(define (get-first-pitch note)
-  (car note))
+; Separate by measures with metadata -- this collects
+; all measures will the same metadata in one list.
 
-(define (get-frequency note)
-  (list-ref note (- (length note) 1)))
-
-
-#|
-A pitch predicate where it returns true if the input is a valid symbol following the CFL:
-pitch ::= letter accidental? octave 
-letter ::= A | B | C | D | E | F | G
-accidental ::= # | ## | b | bb
-octave ::= [0-9]+
-|#
-(define (pitch? str)
-  (let ((len (string-length str)))
-    (cond ((< len 2) #f)
-	  ((= len 2) (and (letter? (substring str 0 1)) (string->number (substring str 1 2))))
-	  (else
-	   (let ((letter (substring str 0 1))
-		 (accidental-double (substring str 1 3))
-		 (possible-octave-1 (substring str 3 len)))
-	     (if (and (letter? letter) (double-accidentals? accidental-double) (string->number possible-octave-1))
-		 #t
-		 (let ((accidental-single (substring str 1 2))
-		       (possible-octave-2 (substring str 2 len))
-		       (possible-octave-3 (substring str 1 len)))
-		   (print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
-		   (if (and (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
-		       #t
-		       (and (letter? letter) (number? possible-octave-3)))
-		   )
-		 )
-	     )
-	   )
-	  )))
-#|
-(pitch? "A#3") ;#t
-(pitch? "#3") ;#f
-(pitch? "f##3") ;#f
-(pitch? "G2") ;#t
-(pitch? "Cbb") ;#f
-(pitch? "Cbb3") ;#t
-(pitch? "F##17") ;#t
-(pitch? "2") ;#f
-|#
-
-(define (frequency? expr)
-  (and (string->number expr) (>= (string->number expr) 0))
-  )
+; TODO (this edge case below)
+; If there is no metadata in the entire expression, then
+; return a single list with the metadata from the last measure
+; of the current piece prepended to it. (TODO: this is fake metadata for now)
+(define (separate-by-metadata string-expr)
+  (define (helper lst acc current)
+    ; lst is a list of measures, each with or without metadata (invariant)
+    ; acc is a list of lists of measures, each with or without metadata (invariant)
+    ; current is a list of measures, each with or without metadata (invariant)
+    (cond ((null? lst) 
+           (if (not (null? current))
+               (reverse (cons (reverse current) acc))
+               acc))
+          ((metadata? (caar lst))
+           (helper (cdr lst)
+                   (if (not (null? current))
+                       (cons (reverse current) acc)
+                       acc)
+                   (list (car lst))))
+          (else
+           (helper (cdr lst)
+                   acc
+                   (cons (car lst) current)))))
+  (helper string-expr '() '()))
 
 #|
-(frequency? "1") ;#t
-(frequency? "4") ;#t
-(frequency? "1/3") ;#t
-(frequency? "a1") ;#f
-(frequency? "-4") ;#f
-(frequency? "0") ;#t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t     
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t  
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+(equal? (separate-by-metadata
+            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 |#
+
+
+; Assign each measure with its proper metadata (tested below)
+; string-expr is a list of lists of measures, where each list's measure all have the same metadata
+; Case 1 - M1 notes | notes | ...
+; Case 2 – M1 notes | notes | M2 notes | notes
+; Case 3 – notes | notes | ... [TODO] (look at metadata from last measure)
+(define (propagate-metadata string-expr)
+    (map (lambda (measure-list)
+        (let ((metadata (get-metadata (first measure-list))))
+            (cons (first measure-list)
+                (map (lambda (measure) (cons metadata measure)) (cdr measure-list)))))
+    string-expr)) ; assume first measure in each list has metadata
 
 #|
-A note predicate where it is represented by a pitch and then a duration for teh note.
-Return true if the symbol follows this pattern, else false.
+(equal?
+    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+; -> #t
+(equal?
+    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))))
+    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
+; -> #t
 |#
-(define (note? expr)
-  (print (>= (length expr)))
-  (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
-       (let lp ((expr expr))
-	 (if (= 1 (length expr))
-	     (frequency? (car expr)) ;; last item is note duration
-	     (and (pitch? (car expr)) (lp (cdr expr))) ;; check every item before frequency is a valid pitch
-	     )
-	 )
-       )
-  )
 
+; metadata-splits is a list of lists of measures
+(define (flatten-section lst)
+    (map
+        (lambda (sublist)
+            (list (first sublist) (cdr sublist)))
+    (apply append lst))) ; keep in a separate procedure to properly use apply
 
 #|
-(note? (list "A#2" "3")) ;#t
-(note? (list "Cb3" "G##2" "2")) ;#t
-(note? (list "Cb3" "G##2")) ;#f
-(note? (list "2")) ;#f
-(note? (list "Bbb4" "D##2" "F2" "7")) ;#t
+(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+; -> #t
+(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+; -> #t
 |#
 
-(define (get-metadata measure)
-  (car measure))
 
-(define (get-time measure)
-  (car (get-metadata measure)))
-(define (get-key measure)
-  (cadr (get-metadata measure)))
-(define (get-clef measure)
-  (caddr (get-metadata measure)))
-
-;;TODO: should we make meta-info more specific? like key and time signature etc
-#|
-A meta-info predicate, all elements must be strings or number.
-|#
-(define (meta-info? expr)
-  (pair? expr)
-  (let lp ((expr expr))
-    (if (null? expr)
-	#t
-	(and (or (number? (car expr)) (string? (car expr)))
-	     (lp (cdr expr))))))
-#|
-(meta-info? (list "hello" 1)) ; #t
-(meta-info? (list "hello" 1 (list 1))) ; #f   
-|#
+; Applies a series of transformations to properly process a section expression.
+(define (process-section string-expr)
+    (flatten-section
+        (propagate-metadata
+            (separate-by-metadata
+                (separate-by-measure string-expr)))))
 
 #|
-Get a list of notes from the measure
+(section? (process-section (stringify-terms '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))) ; more test cases below
 |#
-(define (get-notes-in-measure measure)
-  (cdr measure))
+
+; Parses the expression into our music data types
+; The main entry point for user input
+(define (parse expr)
+    (let ((string-expr (stringify-terms expr)))
+        (cond
+            ((and
+                (string? (first string-expr))
+                (note? string-expr))
+                string-expr) ; note (no further processing)
+            ((contains-bar string-expr)
+                (process-section string-expr)) ; section (contains at least one "|")
+            (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
+
+; TODO: | (no quotes) is not a valid Scheme symbol name
+; we use "|" for now but we could change the character?
 
 #|
-(pp (get-notes-in-measure (list (list "test" 1)
-				(list (list "A#4" "Bb3" "2")
-				      (list "G#2" "Bb1" "2")))))
-;; (("A#4" "Bb3" "2") ("G#2" "Bb1" "2"))
+; note no quotes!
+(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
+(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (C#2 2) (D3 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t
+
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2)))) ; -> #t
+(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2) "|" (3/4 (A major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
 |#
-
-#|
-A measure predicate, at least two notes as arguments.
-Has 1 meta and a list of notes.
-Return true if at least two notes and meta, else false.
-|#
-(define (measure? expr)
-  (define (check-elements elts)
-    (if (null? elts) ;; empty
-	#t
-	(and (note? (car elts)) (check-elements (cdr elts)))))
-  (if (and (meta-info? (car expr))
-	   (not (note? (car expr)))) ;; has meta
-      (and (<= 2 (length (cadr expr))) ;; at least two notes
-	   (check-elements (cadr expr)))
-      #f))
-#|
-(measure? (list
-	   (list "test" 1) ; meta
-	   (list (list "A#4" "Bb3" "2")
-		 (list "G#2" "Bb1" "2")))) ;; #t
-
-;; meta with 1 note only
-(measure? (list
-	   (list "test" 1) ; meta
-	   (list (list "A#4" "Bb3" "2")))) ; #f
-
-;; no meta with 1 note only		
-(measure? (list
-	   (list (list "A#4" "Bb3" "2")))) ; #f
-
-
-(measure? (list
-	   (list (list "A#4" "Bb3" "2")
-		(list "A#4" "Bb3" "2")))) ; #f
-
-|#
-
-#|
-A section predicate, at least two measures as arguments.
-Has 1 meta and a list of measures.
-Return true if at least two measures and meta, else false.
-|#
-(define (section? expr)
-  (define (check-elements elts)
-    (if (null? elts) ;; empty
-	#t
-	(and (measure? (car elts)) (check-elements (cdr elts)))))
-  (if (and (meta-info? (car expr))
-	   (not (measure? (car expr)))) ;; has meta
-      (and (<= 2 (length (cadr expr))) ;; at least two measures
-	   (check-elements (cadr expr)))
-      #f))
-#|
-
-
-; (add (meta-info ...) (A#4 Bb3 2) (G#2 Bb1 2) | (A#4 Bb3 2) (G#2 Bb1 2) |)
-
-; only meta-info for measure and section
-
-
-|#
-; "G#3" --> "Ges'''"
-
-;;; convert to a specific number
-;;; more esaily
