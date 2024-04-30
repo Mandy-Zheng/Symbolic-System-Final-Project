@@ -2,27 +2,25 @@
 ;; Load logic for session environment
 (load "environment.scm")
 ;; generic add
-;;(load "add.scm")
 (load "parser.scm")
+(load "converter.scm")
 
 ;; global vars for each session
 (define current-piece-name)
 (define author-name)
-(define session-environment)
+(define session-environment) ;; list of voices, voice is list of measures
+(define current-voice-name)
+(define current-voice-index) 
 
-;; FOR modify to use to get body
-(define (get-current-piece-body)
-  (if (null? current-piece-name)
-     ; (begin
-;	(display-message (list "No piece selected or defined at the moment"))
-	#f ;; don't do anything
-        (lookup-variable-value current-piece-name session-environment)))
 
+;; Display welcome message, and make an empty environment
 (define (start-composing my-name)
   (set! author-name my-name)
   (set! session-environment (make-global-environment))
   (welcome-description))
 
+
+;; Display helper functions
 (define (display-message message)
   (if (pair? message)
       (begin
@@ -34,6 +32,7 @@
                   (cdr message))))
   'done)
 
+;; same as display-message, just have new line in between
 (define (display-measures message)
   (if (pair? message)
       (begin
@@ -56,56 +55,159 @@
   (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
 
 
-;;; Helper functions
-;; Return the measure at index i
-(define (get-measure-at-index i)
-  (list-ref (lookup-variable-value current-piece-name session-environment) i))
+;;; Helper functions for add, insert, delete
+(define (find-index-by-first-element list-of-lists name)
+  (let loop ((lists list-of-lists)
+             (index 0))
+    (cond ((null? lists) #f) ; not found
+          ((equal? (caar lists) name) index)
+          (else (loop (cdr lists) (+ index 1))))))
 
+;; updates the current-voice-index
+(define (update-current-voice-index)
+  (if (null? current-voice-name)
+      #f
+      (begin
+	(let ((body (get-current-piece-body)))
+	  (set! current-voice-index
+		(find-index-by-first-element body current-voice-name))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Read From Environment ;;;  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define (get-all-pieces-names)
+ (environment-variables session-environment)) 
+
+;; Get the current piece's body, include all voices
+(define (get-current-piece-body)
+  (if (null? current-piece-name)
+	#f ;; don't do anything
+        (lookup-variable-value current-piece-name session-environment)))
+
+;; Get the current voice body with the voice name and list of measures
+(define (get-current-voice-body)
+  (let ((body (get-current-piece-body)))
+    (list-ref body current-voice-index)))
+
+;; Get only the measures in the current voice
+(define (get-current-voice-measures)
+  (cadr (get-current-voice-body)))
+
+;; Return the measure at index i of the current-voice
+(define (get-measure-at-index i)
+  (let ((voice-body (get-current-voice-measures)))
+    (list-ref voice-body i)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Modify Environment ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Save the full body of the piece given the new body
 (define (save-body new-body)
   (set-variable-value! current-piece-name new-body session-environment))
 
-;;; Getter: display stuffs for users
+;; Save the new voice body in the current piece
+(define (save-voice new-voice-body)
+  ;; call save-body with the new full content
+  (let ((current-body (get-current-piece-body))) ; full body
+    (save-body (map (lambda (voice index)
+		      (if (= index current-voice-index)
+			  (list current-voice-name new-voice-body) ;replace with new voice
+			  voice))
+		    current-body (iota (length current-body))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Modidy Global vars ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; reset  current-voice-name and index because piece was changed
+(define (reset-voice-vars)
+  (set! current-voice-name '())
+  (set! current-voice-index '()))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Getter/Commands for users: display stuffs for users ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Get the names of all current pieces.
-(define (get-all-pieces!)
-  (let ((all-pieces (environment-variables session-environment)))
+(define (get-all-pieces-names!)
+  (let ((all-pieces (get-all-pieces-names)))
     (if (null? all-pieces)
 	(display-message (list "You haven't written any piece."))
 	(display-message (list "All pieces: " (environment-variables
-					       session-environment))))))
+					       session-environment)))))
+  'done)
 
+(define (get-current-piece-name!)
+  (display-message (list "The current piece is:" current-piece-name))
+  'done)
+
+;; display full voice body
+(define (get-current-voice-piece!)
+  (if (null? current-voice-name)
+      (display-message (list "Oops, you haven't selected a voice to edit."))
+      (begin
+	(let ((voice-body (get-current-voice-body)))
+	  (display-message (list "Here's your current voice" (car voice-body)))
+	  (display-measures (map (lambda (measure index)
+			           (list
+				    (string-append "Measure-" (number->string index))
+				    measure))
+				 (cadr voice-body) (iota (length (cadr voice-body))))))))
+  'done)
+
+;; display full piece body
 (define (get-current-piece!)
-  (display-message (list "The current piece is:" current-piece-name)))
-
-(define (get-current-body!)
   (if (null? current-piece-name)
       (display-message (list "Oops, you haven't selected a piece to compose."))
       (begin
-	(let ((body (lookup-variable-value current-piece-name session-environment)))
-	  
+	(let ((body (get-current-piece-body)))
 	  (display-message (list "Here's your current piece:"))
-	  (display-measures (map (lambda (measure index)
-				  (list
-				   (string-append "Measure-" (number->string index))
-				   measure))
-				body (iota (length body))))))))
+	  ;; just new line instead 
+	  (for-each (lambda (voice index)
+			  (let ((all-measures    
+			     	(map (lambda (measure index)
+				       (list
+					(string-append "Measure-" (number->string index))
+					measure))
+				     (cadr voice) (iota (length (cadr voice))))))
+			    (display-message (list "Voice" (car voice)))
+			    (if (null? all-measures)
+				(display-message (list "No measure added yet."))
+				(display-measures all-measures))))
+		    body (iota (length body))))))
+  'done)
 
-	
 
-;; Commands to compose
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commands to compose ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (define-new-piece! piece-name)
   (define-variable! piece-name (list ) session-environment)
   (set! current-piece-name piece-name)
-  (display-message (list "You're starting a new piece:" piece-name)))
+  (display-message (list "You're starting a new piece:" piece-name))
+  (display-message (list "Please start by defining a voice for your first voice.")))
 
-
+(define (define-new-voice! voice-name)
+  (set! current-voice-name voice-name)
+  ;; append new voice to body
+  (let ((piece-body (get-current-piece-body)))
+    (save-body (append! piece-body (list (list voice-name (list  ))))))
+  (update-current-voice-index)
+  (display-message (list "You're now starting voice" voice-name
+			 "at index:" current-voice-index))
+  (get-current-piece!))
+  
 ;; Can only add by measure and section.
 (define (add! . expr)
-  (let ((new-additions expr) ; TODO use add generic
-	(body (get-current-piece-body)))
+  (let ((new-additions expr) ; TODO use parse 
+	(voice-body (get-current-voice-measures)))
     (if (measure? expr)
-	(save-body (append! body (list new-additions))) ; keep measure as 1 list
-	(save-body (append! body new-additions))) ; like extend   
-    (get-current-body!)))
+	(save-voice (append! voice-body (list new-additions))) ; keep measure as 1 list
+	(save-voice (append! voice-body new-additions))) ; like extend   
+    (get-current-voice-piece!)))
 
 ;; Insert by splitting two portion. Helper for insert!.
 (define (insert-at index element lst)
@@ -113,92 +215,91 @@
       (cons element lst) ; add to end
       (cons (car lst)    ; add to front
             (insert-at (- index 1) element (cdr lst))))) 
-#|
-(define my-list '(1 2 3 4 5))
-(display (insert-at 2 100 my-list))
-|#
 
 (define (insert! insert-i new-measure)
-  (let ((current-body (get-current-piece-body)))
-    (save-body (insert-at insert-i new-measure current-body)))
-  (get-current-body!))
-
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (insert-at insert-i new-measure current-body)))
+  (get-current-voice-piece!))
 
 (define (delete-by-index index lst)
   (cond ((null? lst) '())  ; empty
         ((= index 0) (cdr lst)) ; return the rest of the list
         (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
-#|
-(define my-list '(1 2 3 4 5))
-(display (delete-by-index 1 my-list)) ;(1 3 4 5)
-|#
 
 ;; Given the index of the measure, delete the measure.
 (define (delete! delete-i)
-  (let ((current-body (get-current-piece-body)))
-    (save-body (delete-by-index delete-i current-body)))
-  (get-current-body!))  
-
-;; Returns whether the expression contains at least one incidence of "|".
-(define (contains-bar expr)
-  (if (= (length expr) 0)
-    #f
-    (or
-      (and (string? (first expr)) (string=? (first expr) "|"))
-      (contains-bar (cdr expr)))))
-
-#|
-(contains-bar '("|")) ; #t
-(contains-bar '()) ; #f
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))) ; #t
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|")) ; #t
-(contains-bar '("G#2" "2")) ; #f
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
-|#
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (delete-by-index delete-i current-body)))
+  (get-current-voice-piece!))  
 
 
-; Add by parsing
-; TODO: combine with add! above
-; TODO: catch error if malformed? so it doesn't try to apply?
-(define (add-parse expr)
-  (cond
-    ((and (string? (first expr)) (note? expr)) expr) ; just return the note list (no flattening)
-    ((contains-bar expr) expr) ; section (contains at least one "|")
-    (else (list (car expr) (cdr expr))))) ; measure
+;; Given the index of the measure, replace it with the new one.
+(define (edit-measure! index new-measure)
+  (let ((current-body (get-current-voice-measures)))
+    (save-voice (map (lambda (measure i)
+		      (if (= index i)
+			  new-measure
+			  measure))
+		      current-body (iota (length current-body)))))
+  (get-current-voice-piece!))
 
-#|
-(note? (add-parse '("G#2" "2"))) ; #t
-(note? (add-parse '("G#2" "B2" "2"))) ; #t
-(measure? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1")))) ; #t (note the simpler syntax with fewer parentheses)
+(define (switch-voice! new-voice)
+  (let ((new-voice-i (find-index-by-first-element (get-current-piece-body) new-voice)))
+    (if new-voice-i
+	(begin
+	  (set! current-voice-name new-voice)
+	  (set! current-voice-index new-voice-i)
+	  (display-message (list "You're currently working on voice" new-voice))
+	  (get-current-voice-piece!))
+	(begin
+	  (display-message (list "The system cannot find" new-voice "in the current piece."
+				 "Please make sure you spell the name correctly."))
+	  (get-current-piece!))))
+  'done)
 
-; note the simpler syntax with fewer parentheses and no metadata for second measure
-(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1")))) ; #t (TODO)
-(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1") "|"))) ; #t (TODO)
-|#
+(define (switch-piece! new-piece-name)
+  (let ((all-pieces-names (get-all-pieces-names)))
+    (if (member new-piece-name all-pieces-names)
+	(begin
+	  (set! current-piece-name new-piece-name)
+	  (reset-voice-vars)
+	  (display-message (list "You're currently working on piece" new-piece-name))
+	  (get-current-piece!)
+	  (display-message (list "Please start by selecting a voice to start editing.")))
+	(begin
+	  (display-message (list "The system cannot find" new-piece-name
+				 "in the environment."))
+	  (get-all-pieces-names!))))
+  'done)
 
-; TODO (fix section? with meta)
-; (internal rep of section is just nested lists -- easier to deal with!)
-; TODO: get-section-meta
-; TODO: get-number-measures-in-section
 
 ;;; TESTING UI
-;;(section? (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") "|" ("G#2" "2") ("A2" "1"))))
 
-; TODO: can we try to eliminate "" by storing away note names?
-(add! (add-parse '(("test" 1) ("G#2" "2") ("A2" "1") ("B2" "1"))))
+;; TODO fix it
+;; Show pdf of the current piece, use converter from lilypond
+(define (show-pdf!)
+  (apply convert-piece (get-current-piece-body)))
+
+
+(get-current-piece-body)
+
+(get-current-piece-body)
 
 (start-composing 'nhung)
-(get-all-pieces!)
+(get-all-pieces-names!)
 (define-new-piece! 'twinkle)
 
-(get-all-pieces!)
+(define-new-voice! 'one)
+
+(get-all-pieces-names!)
 (get-current-piece!)
-(get-current-body!)
+
 
 (add! (list
 	   (list "test" 1) ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
+
 
 (add! (list
 	   (list "test-meta 2" 2) ; meta
@@ -207,13 +308,98 @@
 
 
 (insert! 1 (list
-	  (list "test-meta 3" 2) ; meta
+	  (list "test-meta new insert at 1" 2) ; meta
 	  (list (list "A#4" "Bb3" "2")
 		(list "G#2" "Bb1" "2"))))
 
 
 (delete! 1)
 (delete! 0)
+
+(define-new-voice! 'two)
+
+(add! (list
+	   (list "test" 1) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
+
+
+
+(add! (list
+	   (list "test-meta 2" 2) ; meta
+	   (list (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))))
+
+
+(insert! 1 (list
+	  (list "test-meta new insert at 1" 2) ; meta
+	  (list (list "A#4" "Bb3" "2")
+		(list "G#2" "Bb1" "2"))))
+
+
+(delete! 1)
+
+(get-current-voice-piece!)  
+(get-current-piece!)
+
+(edit-measure! 1 (list
+		  (list "new edit at 1" 2) ; meta
+		  (list (list "A#4" "Bb3" "2")
+			(list "G#2" "Bb1" "2"))))
+
+(get-current-piece!)
+(switch-voice! 'one)
+(switch-voice! 'doesnotexist)
+
+
+(define-new-piece! 'twinkle1)
+(define-new-voice! 'one)
+(switch-piece! 'twinkle1)
+(switch-piece! 'doesnotexist)
+(switch-piece! 'twinkle)
+
+;;example works!!
+#|
+;; test with real content
+(start-composing 'nhung)
+(define-new-piece! 'twinkle)   
+(define-new-voice! 'one)
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "G4" "4") (list "A4" "4") (list "C4" "E4" "2")))
+
+(define-new-voice! 'two)
+
+(add! (list (list "4/4" (list "C" "major") "bass")
+	    (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "2") ))
+
+(add!  (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+
+(get-current-piece!)
+(get-current-piece-body)
+
+(apply convert-piece (get-current-piece-body))
+
+(show-pdf!)
+(open-pdf "output")
+|#
+
+
+#|
+(define example (list
+  (list (list "voice1") (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
+			(list (list "voice2") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))))
+
+
+(apply convert-piece example)
+|#
+
 
 
 (define (edit-metadata-time time measure-start measure-end measure-list)

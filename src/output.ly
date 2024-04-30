@@ -11,8 +11,8 @@ g4 a4 <c e g >2 |
 \new Staff { 
  \relative c' {
 \time 4/4 \key c \major \clef bass 
-a,4 gis4 <c e g >2 | 
-b4 d4 <f a c >2 | 
+a,4 gis4 <c e >2 | 
+b4 d4 <f a >2 | 
 } 
  } 
 >> 

@@ -1,8 +1,9 @@
-; Generic add procedures
+
+					; Generic add procedures
+(load "~/Symbolic-System-Final-Project/src/predicates.scm")
 (load "~/Symbolic-System-Final-Project/src/parser.scm")
 ;; (define (default-convert expr)
 ;;   (error "Unknown expression type" expression))
-
 
 ;;NOTE: TO USE CONVERT ON A PIECE OF MUSIC, USE CONVERT-PIECE OR CONVERT-SECTION
 (define (convert-metadata measure)
@@ -55,9 +56,10 @@
 	)
       )
   )
-(convert-note (list "A#2" "1")) ; "ais,,1"
 
-(convert-note (list "A#2" "G2" "Bb4" "1")) ; "<ais,, g,, bes >1"
+;;(convert-note (list "A#2" "1")) ; "ais,,1"
+
+;;(convert-note (list "A#2" "G2" "Bb4" "1")) ; "<ais,, g,, bes >1"
 
 (define (convert-measure measure-info)
   (let lp ((measure (get-notes-in-measure measure-info))
@@ -69,7 +71,7 @@
     )
   )
 
-(convert-measure (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ;"fis,,,2 a,,1 | \n"
+;;(convert-measure (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ;"fis,,,2 a,,1 | \n"
 
 (define (convert-time time)
   (string-append "\\time " time " "))
@@ -107,10 +109,9 @@
 
     ))
 
-(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
+;;(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
 
 (define (convert-section . sections)
-
   (let lp ((sections sections)
 	   (measure (car sections))
 	   (converted (convert-metadata (car sections)))
@@ -129,7 +130,7 @@
       )
     )
   )
-(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
+;;(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
 
 ;; (define-generic-procedure-handler convert
 ;;   (match-args note?)
@@ -143,12 +144,15 @@
 ;;   (match-args section?)
 ;;   convert-section)
 (define (convert-voice voice)
-  (print "voice" voice)
-  (string-append "\\new Staff { \n \\relative c' {\n" (apply convert-section (cdr voice)) "} \n } \n")
+  (string-append "\\new Staff { \n \\relative c' {\n" (apply convert-section (cadr voice)) "} \n } \n")
   )
 
-(display (convert-voice (list (list "voice1") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
-		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") ))))
+#|
+(display (convert-voice (list (list "voice1")
+			      (list
+			       (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2")) 
+			       (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )))))
+|#
 
 (define (convert-piece . piece)
   (call-with-output-file "output.ly"
@@ -157,27 +161,25 @@
       (display "\\score {\n << \n" output-port)
       (display (apply string-append (map convert-voice piece)) output-port)
       (display ">> \n \\layout {} \n}\n" output-port))))
-
-(display (convert-piece (list (list "voice1") (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
-			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2")))
-			(list (list "voice2") (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
-			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2") ))))
-
+#|
+(display (convert-piece (list (list "voice1") (list (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2"))))
+			(list (list "voice2") (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2"))))))
 
 (get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
+|#
 
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
   (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
-(open-pdf "output")
 
-
-
-
+;;output 
+;;(open-pdf "output")
 
   
-  (
+#|
 
   
   "cf = \relative {
@@ -205,10 +207,5 @@
 ;;  \key g \major % Change to the key of G major
 ;;  c4 d e f | g2 g4 | a8 a g4 f2 | e1 | r2 r4 r8 r16 r32 r64 |
 ;;}
+|#
 
-
-
-
-
-
-(add (G#3 1) (G#3 1) (G#3 1) (G#3 1))
