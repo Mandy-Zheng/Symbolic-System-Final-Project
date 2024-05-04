@@ -112,7 +112,7 @@ octave ::= [0-9]+
 		 (let ((accidental-single (substring str 1 2))
 		       (possible-octave-2 (substring str 2 len))
 		       (possible-octave-3 (substring str 1 len)))
-		   (print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
+		   ;(print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
 		   (if (and (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
 		       #t
 		       (and (letter? letter) (number? possible-octave-3)))
@@ -150,7 +150,7 @@ A note predicate where it is represented by a pitch and then a duration for teh 
 Return true if the symbol follows this pattern, else false.
 |#
 (define (note? expr)
-  (print (>= (length expr)))
+  ; (print (>= (length expr)))
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
        (let lp ((expr expr))
 	 (if (= 1 (length expr))
@@ -197,8 +197,8 @@ Return true if at least two notes and meta, else false.
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (cadr expr))) ;; at least two notes
-	   (check-elements (cadr expr)))
+      (and (<= 2 (length (cdr expr))) ;; at least two notes
+	   (check-elements (cdr expr)))
       #f))
 
 #|
