@@ -199,7 +199,19 @@
   (display-message (list "You're now starting voice" voice-name
 			 "at index:" current-voice-index))
   (get-current-piece!))
-  
+
+;; delete the whole voice by name
+(define (delete-voice! voice-name)
+  (let ((piece-body (get-current-piece-body)))
+    (let ((delete-i (find-index-by-first-element piece-body voice-name)))
+      (if (not delete-i)
+	  (display-message (list "We cannot find" voice-name "in the system."))
+	  (begin
+	    (save-body (delete-by-index delete-i piece-body))
+	    (display-message (list voice-name "deleted!"))))))
+  (get-current-piece!))
+
+
 ;; Can only add by measure and section.
 (define (add! . expr)
   (let ((new-additions expr) ; TODO use parse 
@@ -432,6 +444,8 @@
 
 (insert-section! 1 new-section)
 
+(delete-voice! 'doesnotexist)
+(delete-voice! 'one) 
 
 #|
 (define example (list
