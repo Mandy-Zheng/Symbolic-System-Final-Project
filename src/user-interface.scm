@@ -241,7 +241,6 @@
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((current-body (get-current-voice-measures)))
-    (pp new-content)
     (if (or (>= insert-i (length current-body))
 	    (< insert-i 0))
 	(display-message (list
@@ -275,7 +274,7 @@
         (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
 
 ;; Given the index of the measure, delete the measure.
-(define (delete! delete-i)
+(define (delete-measure delete-i)
   (let ((current-body (get-current-voice-measures)))
     (if (or (>= delete-i (length current-body))
 	    (< delete-i 0))
@@ -288,8 +287,10 @@
 (define (delete-range lst start end)
   (append (take lst start) (drop lst (+ end 1))))
 
+
+;; Given the index of the measure, delete the measure.  
 ;; Given the start and end index of the sections, delete the measures in the range [start,end].  
-(define (delete-section! start-i end-i)
+(define (delete-section start-i end-i)
   (if (> start-i end-i)
       (display-message (list
 			"The starting index must be smaller than the ending index."))
@@ -301,7 +302,15 @@
 				(- (length current-body) 1)))
 	      (begin
 		(save-voice (delete-range current-body start-i end-i)))))))
-		(get-current-voice-piece!))
+  (get-current-voice-piece!))
+
+
+(define (delete! . indices)
+  (if (= 1 (length indices)) ;; by measure
+      (delete-measure (car indices))
+      (if (> (length indices) 2)
+	  (display-message (list "Please input 1 or 2 indices only."))
+	  (delete-section (car indices) (cadr indices)))))
 
 		 
 ;; Given the index of the measure, replace it with the new one.
@@ -471,10 +480,7 @@
 (insert! 0  (list (list "1/4" (list "C" "major") "bass")
 		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
-(measure? (list (list (list "1/4" (list "C" "major") "bass")
-		      (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
-
-
+; add section
 (add! (list
        (list (list "4/4" (list "C" "major") "bass")
 	    (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
@@ -487,7 +493,6 @@
 (get-current-piece!)
 (get-current-piece-body)
 
-(apply convert-piece (get-current-piece-body))
 
 ; (show-pdf!)
 
@@ -511,15 +516,11 @@
 	  (list (list "4/4" (list "C" "major") "bass")
 		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
 
-(measure? (list new-section))
-
 (section? new-section)
 (measure? new-section)
 
-
 (insert! 0 new-section)
 
-(insert! 0 
 
 (delete-voice! 'doesnotexist)
 (delete-voice! 'two) 
