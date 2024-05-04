@@ -73,21 +73,68 @@
 (define (welcome-description)
   (display-message (list "Welcome" author-name "!"))
   (display-message (list "Are you ready to compose your music?"))
-  (display-message (list "Here are the available commands that you can use to compose your music:"))
-  (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
-
-;; a list of all available commands
-(define (show-all-commands!))
+  (display-message (list "If you need help, please input (help!) into the shell to get more information."))
+  (display-message (list "Please start by creating a new piece with (define-new-piece! piece-name).")))
+  
+(define (help!)
+  (display-messages
+   (list "Run these commands to get more details:"
+	 "1. (show-all-display-commands!) to see all display commands."
+	 "2. (show-all-commands-for-piece!) to see all commands for dealing with pieces."
+	 "3. (show-all-commands-for-voice!) to see all commands for dealing with voices."
+	 "4. (show-all-commands-for-sections!) to see all commands for dealing with sections."
+	 "5. (show-all-commands-for-measures!) to see all commands for dealing with measures."
+	 "6. (show-all-commands-for-notes!) to see all commands for dealing with notes.")))
 
 
 (define (show-all-display-commands!)
   (display-messages
    (list "Here are all of the commands for displaying contents:"
-	 "(get-all-pieces-names!) to see the names of all current pieces."
-	 "(get-current-piece-name!) to see the current piece name."
-	 "(get-current-voice-piece!) to see the current voice for the current piece."
-	 "(get-current-piece!) to see the current curent."
-	 "(get-measure! measure-index) to see the measure at measure-index.")))
+	 "1. (get-all-pieces-names!) to see the names of all current pieces."
+	 "2. (get-current-piece-name!) to see the current piece name."
+	 "3. (get-current-voice-piece!) to see the current voice for the current piece."
+	 "4. (get-current-piece!) to see the current curent."
+	 "5. (get-measure! measure-index) to see the measure at measure-index.")))
+
+(define (show-all-commands-for-notes!)
+  (display-messages
+   (list "Here are all of the commands for dealing with notes:"
+	 "1. (edit-note! measure-i note-i new-note) to edit the note in measure at index measure-i at index note-i with the new content of new-note.")))
+
+(define (show-all-commands-for-measures!)
+  (display-messages
+   (list "Here are all of the commands for dealing with measures:"
+	 "1. (add! measure) to add a new measure to the current voice in the selected piece."
+	 "2. (insert! insert-i new-measure) to insert a new measure at index insert-i to the current voice in the selected piece."
+	 "3. (delete! measure-i) to delete the measure at measure-i for the current voice in the selected piece."
+	 "4. (edit-measure! measure-i new-measure) to edit the measure at index measure-i with the the new-measure for the current voice in the selected piece.")))
+
+(define (show-all-commands-for-sections!)
+  (display-messages
+   (list "Here are all of the commands for dealing with sections:"           "1. (add! section) to add a new section to the current voice in the selected piece."
+	 "2. (insert! insert-i new-section) to insert a new section at index insert-i to the current voice in the selected piece."
+	 "3. (delete! start-i end-i) to delete the measures in the range of [start_i, end_i] for the current voice in the selected piece."
+	 "4. (get-measure! measure-index) to see the measure at measure-index.")))
+
+
+(define (show-all-commands-for-voice!)
+  (display-messages
+   (list "Here are all of the commands for dealing with voices:"
+	 "1. (define-new-voice! voice-name) to create a new voice."
+	 "2. (delete-voice! voice-name) to delete the voice with the name voice-name for the current piece."
+	 "3. (switch-voice! new-voice) to switch to a new voice in the current piece."
+	 "4. (get-current-voice-piece!) to see the current voice for the current piece.")))
+
+
+(define (show-all-commands-for-piece!)
+  (display-messages
+   (list "Here are all of the commands for dealing with pieces:"
+	 "1. (define-new-piece! piece-name) to create a new piece."
+	 "2. (switch-piece! new-piece-name) to switch to a new piece."
+	 "3. (show-pdf!) to see the pdf version of the current piece."
+	 "4. (get-all-pieces-names!) to see the names of all current pieces."
+	 "5. (get-current-piece-name!) to see the current piece name.")))
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -291,7 +338,7 @@
   (define-variable! piece-name (list ) session-environment)
   (set! current-piece-name piece-name)
   (display-message (list "You're starting a new piece:" piece-name))
-  (display-message (list "Please start by defining a voice for your first voice.")))
+  (display-message (list "Please start by defining a voice for your first voice with (define-new-voice! voice-name).")))
 
 (define (define-new-voice! voice-name)
   (set! current-voice-name voice-name)
