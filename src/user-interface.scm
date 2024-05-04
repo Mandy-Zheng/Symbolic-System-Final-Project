@@ -224,7 +224,7 @@
 
 
 ;; Can only add by measure and section.
-(define (add! . expr)
+(define (add! expr)
   (let ((new-additions expr) ; TODO use parse 
 	(voice-body (get-current-voice-measures)))
     (if (measure? expr)
@@ -239,24 +239,35 @@
       (cons (car lst)    ; add to front
             (insert-at (- index 1) element (cdr lst))))) 
 
-(define (insert! insert-i new-measure)
+(define (insert! insert-i new-content) ; for section and measure
   (let ((current-body (get-current-voice-measures)))
-    (save-voice (insert-at insert-i new-measure current-body)))
+    (pp new-content)
+    (if (or (>= insert-i (length current-body))
+	    (< insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 0 to"
+			  (- (length current-body) 1)))
+	(if (measure? new-content)
+	    (save-voice (insert-at insert-i new-content current-body))
+	    (save-voice (insert-section-helper current-body
+					       new-content insert-i)))))   
   (get-current-voice-piece!))
 
 ;; similar to insert-at, but just append the section
 (define (insert-section-helper lst element index)
   (append (take lst index) (append element (drop lst index))))
-
+#|
 (define (insert-section! insert-i new-section)
   (let ((current-body (get-current-voice-measures)))
-    (if (>= insert-i (length current-body))
+    (if (or (>= insert-i (length current-body))
+	    (< insert-i 0))
 	(display-message (list
-			  "The index is out of range. The maximum index is"
+			  "The index is out of range. Please select from 0 to"
 			  (- (length current-body) 1)))
 	(save-voice (insert-section-helper current-body
 					   new-section insert-i)))
     (get-current-voice-piece!)))
+|#
 
 (define (delete-by-index index lst)
   (cond ((null? lst) '())  ; empty
@@ -266,7 +277,12 @@
 ;; Given the index of the measure, delete the measure.
 (define (delete! delete-i)
   (let ((current-body (get-current-voice-measures)))
-    (save-voice (delete-by-index delete-i current-body)))
+    (if (or (>= delete-i (length current-body))
+	    (< delete-i 0))
+	(display-message (list
+			 "The index is out of range. Please select from 0 to"
+			 (- (length current-body) 1)))    
+	(save-voice (delete-by-index delete-i current-body))))
   (get-current-voice-piece!))  
 
 (define (delete-range lst start end)
@@ -301,13 +317,21 @@
 ;; given the index of the measure, index of the note, replace with it with the new one
 (define (edit-note! measure-i note-i new-note)
   (let ((measure-body (get-measure-at-index measure-i)))
-    (save-measure (map (lambda (note i)
-			 (if (= (- i 1) note-i) ;; skipping meta
-			     new-note
-			     note))
-		       measure-body (iota (length measure-body)))
-		  measure-i))
-  (get-current-voice-piece!))
+    (if (not measure-body)
+	(display-message (list "Please select a valid index for the measure."))
+	(begin
+	  (if (or (>= note-i (length (cdr measure-body)))
+		  (< note-i 0))
+	      (display-message
+	       (list "Please select a valid index for note in the range of 0 to"
+		     (- (length (cdr measure-body)) 1)))  
+	      (save-measure (map (lambda (note i)
+				   (if (= (- i 1) note-i) ;; skipping meta
+				       new-note
+				       note))
+				 measure-body (iota (length measure-body)))
+			    measure-i)))))
+    (get-current-voice-piece!))
 
 ;; switching logic
 (define (switch-voice! new-voice)
@@ -444,6 +468,22 @@
 (add!  (list (list "4/4" (list "C" "major") "bass")
 	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
+(insert! 0  (list (list "1/4" (list "C" "major") "bass")
+		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+
+(measure? (list (list (list "1/4" (list "C" "major") "bass")
+		      (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
+
+
+(add! (list
+       (list (list "4/4" (list "C" "major") "bass")
+	    (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+       (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2")
+	     )))
+
+
+
 (get-current-piece!)
 (get-current-piece-body)
 
@@ -451,7 +491,7 @@
 
 ; (show-pdf!)
 
-(edit-note! 0 1 (list "A4" "100"))
+(edit-note! 0 3 (list "A4" "300"))
 (edit-note! 1 1 (list "A4" "100"))     
 
 
@@ -461,17 +501,28 @@
 ;(delete-section! 0 2)  
 
 (define new-section
-  (list  (list (list "4/4" (list "C" "major") "bass")
+  (list  (list (list "1/4" (list "C" "major") "bass")
 	       (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))
 	 (list (list "4/4" (list "C" "major") "bass")
 	       (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
 
-  
+(measure? (list (list (list "1/4" (list "C" "major") "bass")
+		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))
+	  (list (list "4/4" (list "C" "major") "bass")
+		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
 
-(insert-section! 1 new-section)
+(measure? (list new-section))
+
+(section? new-section)
+(measure? new-section)
+
+
+(insert! 0 new-section)
+
+(insert! 0 
 
 (delete-voice! 'doesnotexist)
-(delete-voice! 'one) 
+(delete-voice! 'two) 
 
 #|
 (define example (list
