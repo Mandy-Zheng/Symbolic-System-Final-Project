@@ -116,6 +116,17 @@
 			  voice))
 		    current-body (iota (length current-body))))))
 
+;; given a new measure at index i, save it
+(define (save-measure new-measure-body index)
+  (let ((current-voice-body (get-current-voice-measures)))
+    (save-voice  (map (lambda (measure i)
+			(if (= index i)
+			    new-measure-body
+			    measure))
+		      current-voice-body (iota (length current-voice-body))))))
+
+
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modidy Global vars ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -287,6 +298,18 @@
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
+;; given the index of the measure, index of the note, replace with it with the new one
+(define (edit-note! measure-i note-i new-note)
+  (let ((measure-body (get-measure-at-index measure-i)))
+    (save-measure (map (lambda (note i)
+			 (if (= (- i 1) note-i) ;; skipping meta
+			     new-note
+			     note))
+		       measure-body (iota (length measure-body)))
+		  measure-i))
+  (get-current-voice-piece!))
+
+;; switching logic
 (define (switch-voice! new-voice)
   (let ((new-voice-i (find-index-by-first-element (get-current-piece-body) new-voice)))
     (if new-voice-i
@@ -426,7 +449,10 @@
 
 (apply convert-piece (get-current-piece-body))
 
-(show-pdf!)
+; (show-pdf!)
+
+(edit-note! 0 1 (list "A4" "100"))
+(edit-note! 1 1 (list "A4" "100"))     
 
 
 (delete-section! 0 1)
