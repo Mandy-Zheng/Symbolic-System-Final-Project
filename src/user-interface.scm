@@ -1,7 +1,7 @@
-
 ;; Load logic for session environment
 (load "environment.scm")
 ;; generic add
+(load "predicates.scm")
 (load "parser.scm")
 (load "converter.scm")
 
@@ -221,6 +221,20 @@
     (save-voice (insert-at insert-i new-measure current-body)))
   (get-current-voice-piece!))
 
+;; similar to insert-at, but just append the section
+(define (insert-section-helper lst element index)
+  (append (take lst index) (append element (drop lst index))))
+
+(define (insert-section! insert-i new-section)
+  (let ((current-body (get-current-voice-measures)))
+    (if (>= insert-i (length current-body))
+	(display-message (list
+			  "The index is out of range. The maximum index is"
+			  (- (length current-body) 1)))
+	(save-voice (insert-section-helper current-body
+					   new-section insert-i)))
+    (get-current-voice-piece!)))
+
 (define (delete-by-index index lst)
   (cond ((null? lst) '())  ; empty
         ((= index 0) (cdr lst)) ; return the rest of the list
@@ -232,7 +246,25 @@
     (save-voice (delete-by-index delete-i current-body)))
   (get-current-voice-piece!))  
 
+(define (delete-range lst start end)
+  (append (take lst start) (drop lst (+ end 1))))
 
+;; Given the start and end index of the sections, delete the measures in the range [start,end].  
+(define (delete-section! start-i end-i)
+  (if (> start-i end-i)
+      (display-message (list
+			"The starting index must be smaller than the ending index."))
+      (begin
+	(let ((current-body (get-current-voice-measures)))
+	  (if (>= end-i (length current-body)) ; out of range
+	      (display-message (list
+				"The index is out of range. The maximum index is"
+				(- (length current-body) 1)))
+	      (begin
+		(save-voice (delete-range current-body start-i end-i)))))))
+		(get-current-voice-piece!))
+
+		 
 ;; Given the index of the measure, replace it with the new one.
 (define (edit-measure! index new-measure)
   (let ((current-body (get-current-voice-measures)))
@@ -273,14 +305,13 @@
   'done)
 
 
-;;; TESTING UI
-
-;; TODO fix it
 ;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
-  (apply convert-piece (get-current-piece-body)))
+  (apply convert-piece (get-current-piece-body))
+  (open-pdf "output"))
 
 
+#|
 (get-current-piece-body)
 
 (get-current-piece-body)
@@ -357,11 +388,10 @@
 (switch-piece! 'twinkle1)
 (switch-piece! 'doesnotexist)
 (switch-piece! 'twinkle)
+|#
 
-;;example works!!
-#|
 ;; test with real content
-(start-composing 'nhung)
+(start-composing 'nhung) 
 (define-new-piece! 'twinkle)   
 (define-new-voice! 'one)
 
@@ -385,8 +415,22 @@
 (apply convert-piece (get-current-piece-body))
 
 (show-pdf!)
-(open-pdf "output")
-|#
+
+
+(delete-section! 0 1)
+;(delete-section! 1 0)
+;(get-current-piece!)
+;(delete-section! 0 2)  
+
+(define new-section
+  (list  (list (list "4/4" (list "C" "major") "bass")
+	       (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))
+	 (list (list "4/4" (list "C" "major") "bass")
+	       (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
+
+  
+
+(insert-section! 1 new-section)
 
 
 #|
@@ -453,7 +497,7 @@
   )
 )
 
-
+#|
 (edit-metadata-clef "treble" 2 3 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
@@ -469,3 +513,4 @@
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     ))
+|#
