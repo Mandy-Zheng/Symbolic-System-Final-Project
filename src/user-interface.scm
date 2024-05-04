@@ -5,7 +5,10 @@
 (load "parser.scm")
 (load "converter.scm")
 
-;; global vars for each session
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; global vars for each session ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define current-piece-name)
 (define author-name)
 (define session-environment) ;; list of voices, voice is list of measures
@@ -14,13 +17,15 @@
 
 
 ;; Display welcome message, and make an empty environment
-(define (start-composing my-name)
+(define (start-composing! my-name)
   (set! author-name my-name)
   (set! session-environment (make-global-environment))
   (welcome-description))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Display helper functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Display helper functions
 (define (display-message message)
   (if (pair? message)
       (begin
@@ -30,6 +35,18 @@
                     (display " ")
                     (display-item item))
                   (cdr message))))
+  'done)
+
+;; same as display-message, just have new line in between
+(define (display-messages messages)
+  (if (pair? messages)
+      (begin
+        (fresh-line)
+        (display-item (car messages))
+        (for-each (lambda (item)
+                    (display "\n")
+                    (display-item item))
+                  (cdr messages))))
   'done)
 
 ;; same as display-message, just have new line in between
@@ -48,14 +65,97 @@
   (display item)
   'done)
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commands to guide users ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (welcome-description)
   (display-message (list "Welcome" author-name "!"))
   (display-message (list "Are you ready to compose your music?"))
   (display-message (list "Here are the available commands that you can use to compose your music:"))
   (display-message (list "Use (add ...) to add notes, measures, section, and voice together")))
 
+;; a list of all available commands
+(define (show-all-commands!))
 
-;;; Helper functions for add, insert, delete
+
+(define (show-all-display-commands!)
+  (display-messages
+   (list "Here are all of the commands for displaying contents:"
+	 "(get-all-pieces-names!) to see the names of all current pieces."
+	 "(get-current-piece-name!) to see the current piece name."
+	 "(get-current-voice-piece!) to see the current voice for the current piece."
+	 "(get-current-piece!) to see the current curent."
+	 "(get-measure! measure-index) to see the measure at measure-index.")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Getter/Commands for users: display stuffs for users ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Get the names of all current pieces.
+(define (get-all-pieces-names!)
+  (let ((all-pieces (get-all-pieces-names)))
+    (if (null? all-pieces)
+	(display-message (list "You haven't written any piece."))
+	(display-message (list "All pieces: " (environment-variables
+					       session-environment)))))
+  'done)
+
+(define (get-current-piece-name!)
+  (display-message (list "The current piece is:" current-piece-name))
+  'done)
+
+;; display full voice body
+(define (get-current-voice-piece!)
+  (if (null? current-voice-name)
+      (display-message (list "Oops, you haven't selected a voice to edit."))
+      (begin
+	(let ((voice-body (get-current-voice-body)))
+	  (display-message (list "Here's your current voice" (car voice-body)))
+	  (display-measures (map (lambda (measure index)
+			           (list
+				    (string-append "Measure-" (number->string index))
+				    measure))
+				 (cadr voice-body) (iota (length (cadr voice-body))))))))
+  'done)
+
+;; display full piece body
+(define (get-current-piece!)
+  (if (null? current-piece-name)
+      (display-message (list "Oops, you haven't selected a piece to compose."))
+      (begin
+	(let ((body (get-current-piece-body)))
+	  (display-message (list "Here's your current piece:"))
+	  ;; just new line instead 
+	  (for-each (lambda (voice index)
+			  (let ((all-measures    
+			     	(map (lambda (measure index)
+				       (list
+					(string-append "Measure-" (number->string index))
+					measure))
+				     (cadr voice) (iota (length (cadr voice))))))
+			    (display-message (list "Voice" (car voice)))
+			    (if (null? all-measures)
+				(display-message (list "No measure added yet."))
+				(display-measures all-measures))))
+		    body (iota (length body))))))
+  'done)
+
+
+(define (get-measure! measure-i)
+  (let ((measure (get-measure-at-index measure-i)))
+    (display-message (list "Here is measure" measure-i "\n"
+			    measure)))
+  'done)
+ 
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper functions for add, insert, delete ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define (find-index-by-first-element list-of-lists name)
   (let loop ((lists list-of-lists)
              (index 0))
@@ -71,6 +171,52 @@
 	(let ((body (get-current-piece-body)))
 	  (set! current-voice-index
 		(find-index-by-first-element body current-voice-name))))))
+
+;; Insert by splitting two portion. Helper for insert!.
+(define (insert-at index element lst)
+  (if (= index 0)
+      (cons element lst) ; add to end
+      (cons (car lst)    ; add to front
+            (insert-at (- index 1) element (cdr lst))))) 
+
+;; similar to insert-at, but just append the section
+(define (insert-section-helper lst element index)
+  (append (take lst index) (append element (drop lst index))))
+
+(define (delete-by-index index lst)
+  (cond ((null? lst) '())  ; empty
+        ((= index 0) (cdr lst)) ; return the rest of the list
+        (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
+
+;; Given the index of the measure, delete the measure.
+(define (delete-measure delete-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (>= delete-i (length current-body))
+	    (< delete-i 0))
+	(display-message (list
+			 "The index is out of range. Please select from 0 to"
+			 (- (length current-body) 1)))    
+	(save-voice (delete-by-index delete-i current-body))))
+  (get-current-voice-piece!))  
+
+(define (delete-range lst start end)
+  (append (take lst start) (drop lst (+ end 1))))
+
+;; Given the index of the measure, delete the measure.  
+;; Given the start and end index of the sections, delete the measures in the range [start,end].  
+(define (delete-section start-i end-i)
+  (if (> start-i end-i)
+      (display-message (list
+			"The starting index must be smaller than the ending index."))
+      (begin
+	(let ((current-body (get-current-voice-measures)))
+	  (if (>= end-i (length current-body)) ; out of range
+	      (display-message (list
+				"The index is out of range. The maximum index is"
+				(- (length current-body) 1)))
+	      (begin
+		(save-voice (delete-range current-body start-i end-i)))))))
+  (get-current-voice-piece!))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
@@ -137,60 +283,6 @@
   (set! current-voice-index '()))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Getter/Commands for users: display stuffs for users ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; Get the names of all current pieces.
-(define (get-all-pieces-names!)
-  (let ((all-pieces (get-all-pieces-names)))
-    (if (null? all-pieces)
-	(display-message (list "You haven't written any piece."))
-	(display-message (list "All pieces: " (environment-variables
-					       session-environment)))))
-  'done)
-
-(define (get-current-piece-name!)
-  (display-message (list "The current piece is:" current-piece-name))
-  'done)
-
-;; display full voice body
-(define (get-current-voice-piece!)
-  (if (null? current-voice-name)
-      (display-message (list "Oops, you haven't selected a voice to edit."))
-      (begin
-	(let ((voice-body (get-current-voice-body)))
-	  (display-message (list "Here's your current voice" (car voice-body)))
-	  (display-measures (map (lambda (measure index)
-			           (list
-				    (string-append "Measure-" (number->string index))
-				    measure))
-				 (cadr voice-body) (iota (length (cadr voice-body))))))))
-  'done)
-
-;; display full piece body
-(define (get-current-piece!)
-  (if (null? current-piece-name)
-      (display-message (list "Oops, you haven't selected a piece to compose."))
-      (begin
-	(let ((body (get-current-piece-body)))
-	  (display-message (list "Here's your current piece:"))
-	  ;; just new line instead 
-	  (for-each (lambda (voice index)
-			  (let ((all-measures    
-			     	(map (lambda (measure index)
-				       (list
-					(string-append "Measure-" (number->string index))
-					measure))
-				     (cadr voice) (iota (length (cadr voice))))))
-			    (display-message (list "Voice" (car voice)))
-			    (if (null? all-measures)
-				(display-message (list "No measure added yet."))
-				(display-measures all-measures))))
-		    body (iota (length body))))))
-  'done)
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Commands to compose ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -232,12 +324,6 @@
 	(save-voice (append! voice-body new-additions))) ; like extend   
     (get-current-voice-piece!)))
 
-;; Insert by splitting two portion. Helper for insert!.
-(define (insert-at index element lst)
-  (if (= index 0)
-      (cons element lst) ; add to end
-      (cons (car lst)    ; add to front
-            (insert-at (- index 1) element (cdr lst))))) 
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((current-body (get-current-voice-measures)))
@@ -250,58 +336,6 @@
 	    (save-voice (insert-at insert-i new-content current-body))
 	    (save-voice (insert-section-helper current-body
 					       new-content insert-i)))))   
-  (get-current-voice-piece!))
-
-;; similar to insert-at, but just append the section
-(define (insert-section-helper lst element index)
-  (append (take lst index) (append element (drop lst index))))
-#|
-(define (insert-section! insert-i new-section)
-  (let ((current-body (get-current-voice-measures)))
-    (if (or (>= insert-i (length current-body))
-	    (< insert-i 0))
-	(display-message (list
-			  "The index is out of range. Please select from 0 to"
-			  (- (length current-body) 1)))
-	(save-voice (insert-section-helper current-body
-					   new-section insert-i)))
-    (get-current-voice-piece!)))
-|#
-
-(define (delete-by-index index lst)
-  (cond ((null? lst) '())  ; empty
-        ((= index 0) (cdr lst)) ; return the rest of the list
-        (else (cons (car lst) (delete-by-index (- index 1) (cdr lst))))))
-
-;; Given the index of the measure, delete the measure.
-(define (delete-measure delete-i)
-  (let ((current-body (get-current-voice-measures)))
-    (if (or (>= delete-i (length current-body))
-	    (< delete-i 0))
-	(display-message (list
-			 "The index is out of range. Please select from 0 to"
-			 (- (length current-body) 1)))    
-	(save-voice (delete-by-index delete-i current-body))))
-  (get-current-voice-piece!))  
-
-(define (delete-range lst start end)
-  (append (take lst start) (drop lst (+ end 1))))
-
-
-;; Given the index of the measure, delete the measure.  
-;; Given the start and end index of the sections, delete the measures in the range [start,end].  
-(define (delete-section start-i end-i)
-  (if (> start-i end-i)
-      (display-message (list
-			"The starting index must be smaller than the ending index."))
-      (begin
-	(let ((current-body (get-current-voice-measures)))
-	  (if (>= end-i (length current-body)) ; out of range
-	      (display-message (list
-				"The index is out of range. The maximum index is"
-				(- (length current-body) 1)))
-	      (begin
-		(save-voice (delete-range current-body start-i end-i)))))))
   (get-current-voice-piece!))
 
 
@@ -373,7 +407,7 @@
   'done)
 
 
-;; Show pdf of the current piece, use converter from lilypond
+;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
   (apply convert-piece (get-current-piece-body))
   (open-pdf "output"))
@@ -384,7 +418,7 @@
 
 (get-current-piece-body)
 
-(start-composing 'nhung)
+(start-composing! 'nhung)
 (get-all-pieces-names!)
 (define-new-piece! 'twinkle)
 
@@ -459,7 +493,7 @@
 |#
 
 ;; test with real content
-(start-composing 'nhung) 
+(start-composing! 'nhung) 
 (define-new-piece! 'twinkle)   
 (define-new-voice! 'one)
 
@@ -494,13 +528,14 @@
 (get-current-piece-body)
 
 
-; (show-pdf!)
+(show-pdf!)
 
+#|
 (edit-note! 0 3 (list "A4" "300"))
 (edit-note! 1 1 (list "A4" "100"))     
 
 
-(delete-section! 0 1)
+(delete! 0 1)
 ;(delete-section! 1 0)
 ;(get-current-piece!)
 ;(delete-section! 0 2)  
@@ -511,11 +546,6 @@
 	 (list (list "4/4" (list "C" "major") "bass")
 	       (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
 
-(measure? (list (list (list "1/4" (list "C" "major") "bass")
-		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))
-	  (list (list "4/4" (list "C" "major") "bass")
-		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
-
 (section? new-section)
 (measure? new-section)
 
@@ -524,6 +554,7 @@
 
 (delete-voice! 'doesnotexist)
 (delete-voice! 'two) 
+|#
 
 #|
 (define example (list
