@@ -584,9 +584,19 @@
 					       new-section (- insert-i 1))))))))   
   (get-current-voice-piece!))
 
-	  
+;; TODO TEST 	  
+(define (transpose-measure! steps measure-idx)
+  (let ((old-measure (get-measure-at-index (- measure-idx 1))))
+    (edit-measure! measure-idx (transpose-measure steps old-measure))
+    )
+  )
 
-	  
+(define (transpose-section! steps measure-start measure-end)
+  (let ((old-section (get-range (get-current-voice-measures) (- measure-start 1) (- measure-end 1))))
+    (edit-section! measure-start measure-end (transpose-section steps old-section))
+    )
+  )
+
 
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)

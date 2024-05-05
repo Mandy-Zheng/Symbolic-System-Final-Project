@@ -1,4 +1,5 @@
-(load "~/Symbolic-System-Final-Project/src/parser.scm")
+;;(load "~/Symbolic-System-Final-Project/src/parser.scm")
+(load "~/Symbolic-System-Final-Project/src/predicates.scm")
 (define chromatic-scale
   (list
     (list "A" "G##" "Bbb")
@@ -67,8 +68,8 @@
   (append (list (get-metadata measure)) (map (lambda (note) (transpose-note steps note)) (get-notes-in-measure measure)))
   )
 
-(define (transpose-section steps . sections)
+(define (transpose-section steps sections)
   (map (lambda (measure) (transpose-measure steps measure)) sections)
   )
 
-(transpose-section 3 (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ;;((("3/4" ("E" "minor") "treble") ("A2" "2") ("C2" "1")))
+(transpose-section 3 (list (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")) (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")))) ;;((("3/4" ("E" "minor") "treble") ("A2" "2") ("C2" "1")))
