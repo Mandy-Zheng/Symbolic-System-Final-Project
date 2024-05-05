@@ -339,8 +339,12 @@ Return true if at least one measure, else false.
 
 
 ; these are getters for measures, not metadata
+
+; may not actually be the metadata if the input has no
 (define (get-metadata measure)
-  (car measure))
+	(if (metadata? (car measure))
+		(car measure)
+		(car (get-last-measure))))
 
 ; formatted as x/y
 (define (get-time measure)

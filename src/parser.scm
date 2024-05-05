@@ -190,6 +190,12 @@
 (section? (process-section (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1) || (G#2 2) (A2 1))))) ; more test cases below
 |#
 
+; Properly handles whether there is metadata or not
+(define (process-measure string-expr)
+    (let ((has-metadata? )) (if () () ())))
+(list (car string-expr) (cdr string-expr)))))
+    (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))
+
 ; Parses the expression into our music data types
 ; The main entry point for user input
 (define (parse expr)
@@ -201,7 +207,7 @@
                 string-expr) ; note (no further processing)
             ((contains-bar string-expr)
                 (process-section string-expr)) ; section (contains at least one "||")
-            (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
+            (else (process-measure string-expr))))) ; measure
 
 #|
 ; note no quotes!
