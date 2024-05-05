@@ -168,7 +168,7 @@
 (define (flatten-section lst)
     (map
         (lambda (sublist)
-            (list (first sublist) (cdr sublist)))
+            (cons (first sublist) (cdr sublist)))
     (apply append lst))) ; keep in a separate procedure to properly use apply
 
 #|
@@ -178,16 +178,12 @@
 ; -> #t
 |#
 
-; Applies a series of transformations to properly process a section expression.
+; Applies a series of transformations to properly process a section expression with tests below.
 (define (process-section string-expr)
     (flatten-section
         (propagate-metadata
             (separate-by-metadata
                 (separate-by-measure string-expr)))))
-
-#|
-(section? (process-section (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1) || (G#2 2) (A2 1))))) ; more test cases below
-|#
 
 ; Whether a given string expression representing a measure has metadata.
 (define (has-metadata? string-expr) (metadata? (car string-expr)))
@@ -205,7 +201,7 @@
             (if (has-metadata? string-expr)
             (cdr string-expr)
             string-expr)))
-    (list metadata notes)))
+    (cons metadata notes)))
 
 ; Combines "3" "4" in the metadata to "3/4"
 ; Assumes well-formed input
@@ -234,7 +230,6 @@
             (else (process-measure string-expr))))) ; measure
 
 #|
-; note no quotes!
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 

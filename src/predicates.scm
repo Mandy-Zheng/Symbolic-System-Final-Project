@@ -216,8 +216,6 @@ Return true if at least two notes and meta, else false.
 	   (check-elements (cdr expr)))
       #f))
 
-; TODO: check with Nhung (second or cdr for lines 200 and 201)
-
 #|
 (measure? (list
 	   (list "3" "4" (list "F" "major") "bass") ; meta
