@@ -301,7 +301,6 @@ Return true if at least one measure, else false.
 (clef? "trebel") ; -> #f
 |#
 
-(pp substring)
 (define (time-signature? time)
 	(and
 	 (string? time)

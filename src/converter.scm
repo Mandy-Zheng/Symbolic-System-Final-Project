@@ -176,7 +176,7 @@
   (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
 
 ;;output 
-(open-pdf "output")
+;;(open-pdf "output")
 
   
 #|
