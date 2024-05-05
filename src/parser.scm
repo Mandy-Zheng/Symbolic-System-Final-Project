@@ -1,4 +1,4 @@
-; (load "~/Symbolic-System-Final-Project/src/predicates.scm")
+(load "predicates.scm")
 
 ; Returns whether the expression contains at least one incidence of "||".
 (define (contains-bar expr)
@@ -178,7 +178,6 @@
 ; -> #t
 |#
 
-
 ; Applies a series of transformations to properly process a section expression.
 (define (process-section string-expr)
     (flatten-section
@@ -198,9 +197,6 @@
 (has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
-
-; TODO -> wrapping of notes happens Here
-; TODO -> also fix with section (lists of measures) and update test cases (start with parse and then work way up)
 ; Properly handles whether there is metadata or not
 (define (process-measure string-expr)
     (let
@@ -211,6 +207,7 @@
             string-expr)))
     (list metadata notes)))
 
+; Combines "3" "4" in the metadata to "3/4"
 ; Assumes well-formed input
 (define (combine-time string-expr)
     (map (lambda (elem) (if
@@ -219,16 +216,14 @@
         elem))
     string-expr))
 
-; TODO -- for section and measure
-
 #|
-(process-measure (combine-time (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1))))) ; -> (("3" "4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
+(process-measure (combine-time (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1))))) ; -> (("3/4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
 |#
 
 ; Parses the expression into our music data types
 ; The main entry point for user input
 (define (parse expr)
-    (let ((string-expr (stringify-terms expr)))
+    (let ((string-expr (combine-time (stringify-terms expr))))
         (cond
             ((and
                 (string? (first string-expr))
@@ -236,7 +231,7 @@
                 string-expr) ; note (no further processing)
             ((contains-bar string-expr)
                 (process-section string-expr)) ; section (contains at least one "||")
-            (else (process-measure (combine-time string-expr)))))) ; measure
+            (else (process-measure string-expr))))) ; measure
 
 #|
 ; note no quotes!
