@@ -45,8 +45,8 @@
 
 #|
 (stringify-terms '(a#2 b3 1)) ; -> ("A#2" "B3" "1")
-(stringify-terms '(a#2 (1/3 c1) d4)) ; -> ("A#2" ("1/3" "C1") "D4")
-(stringify-terms '(a#2 (b3 c1 (d4 2/3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2/3" ("F3" "4"))))
+(stringify-terms '(a#2 (1 3 c1) d4)) ; -> ("A#2" ("1" "3" "C1") "D4")
+(stringify-terms '(a#2 (b3 c1 (d4 2 3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2" "3" ("F3" "4"))))
 |#
 
 
@@ -112,29 +112,29 @@
 
 #|
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))))) ; -> #t
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t     
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t     
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t  
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t  
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 (equal? (separate-by-metadata
-            '((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
-        '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
+            '((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))
+        '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 |#
 
 
@@ -152,12 +152,12 @@
 
 #|
 (equal?
-    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
-    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    (propagate-metadata '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1")))))
 ; -> #t
 (equal?
-    (propagate-metadata '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))))
-    '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
+    (propagate-metadata '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))))
+    '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")))))
 ; -> #t
 |#
 
@@ -169,9 +169,9 @@
     (apply append lst))) ; keep in a separate procedure to properly use apply
 
 #|
-(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+(section? (flatten-section '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))))
 ; -> #t
-(section? (flatten-section '(((("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3/4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))))
+(section? (flatten-section '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ((("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1")) (("3" "4" ("A" "major") "bass") ("G#2" "2") ("A2" "1"))))))
 ; -> #t
 |#
 
@@ -184,7 +184,7 @@
                 (separate-by-measure string-expr)))))
 
 #|
-(section? (process-section (stringify-terms '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))) ; more test cases below
+(section? (process-section (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1))))) ; more test cases below
 |#
 
 ; Parses the expression into our music data types
@@ -205,14 +205,14 @@
 
 #|
 ; note no quotes!
-(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
-(measure? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
+(measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
+(measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (C#2 2) (D3 1)))) ; -> #t
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (C#2 2) (D3 1)))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|"))) ; -> #t
 
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2)))) ; -> #t
-(section? (parse '((3/4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5/4 (G major) bass) (G#2 2) (A2 2) "|" (3/4 (A major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5 4 (G major) bass) (G#2 2) (A2 2)))) ; -> #t
+(section? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1) "|" (5 4 (G major) bass) (G#2 2) (A2 2) "|" (3 4 (A major) bass) (G#2 2) (A2 1) "|" (G#2 2) (A2 1)))) ; -> #t
 |#

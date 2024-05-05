@@ -274,26 +274,31 @@ Return true if at least one measure, else false.
 ;;; Metadata
 
 (define (clef? clef)
-  (member clef (list "treble" "bass" "alto" "tenor" "percussion")))
+  (let
+  	((res (member clef (list "treble" "bass" "alto" "tenor" "percussion"))))
+	(and res (list? res) (> (length res) 0))))
 
 #|
-(clef? "treble") ; -> '("treble" "bass" "alto" "tenor" "percussion")
-(clef? "alto") ; -> '("alto" "tenor" "percussion")
+(clef? "treble") ; -> #t
+(clef? "alto") ; -> #t
 (clef? "trebel") ; -> #f
 |#
 
+
 (define (time-signature? time)
-	(let ((slash-index (and (string? time) (string-search-forward "/" time))))
 	(and
-		(number? (string->number (substring time 0 slash-index)))
-		(string=? (char->name (string-ref time slash-index)) "/")
-		(number? (string->number (substring time (+ slash-index 1)))))))
+		(list? time)
+		(= (length time) 2)
+		(number? (string->number (first time)))
+		(number? (string->number (second time)))))
 
 #|
-(time-signature? "4/4") ; -> #t
+(time-signature? (list "4" "4")) ; -> #t
+(time-signature? (list "4")) ; -> #f
+(time-signature? "4/4") ; -> #f
 (time-signature? "4/") ; -> #f
-(time-signature? "3/4") ; -> #t
-(time-signature? "12/8") ; -> #t
+(time-signature? (list "3" "4")) ; -> #t
+(time-signature? (list "12" "8")) ; -> #t
 |#
 
 
@@ -323,8 +328,14 @@ Return true if at least one measure, else false.
 (define (get-metadata measure)
   (car measure))
 
+; formatted as x/y
 (define (get-time measure)
-  (caar measure))
+  (string-append (first measure) "/" (second measure)))
+
+#|
+(get-time (list "3" "4" (list "F" "major") "bass")) ; -> 3/4
+(get-time (list "12" "8" (list "F" "major") "bass")) ; -> 12/8
+|#
 
 (define (get-key measure)
   (cadr (car measure)))
@@ -338,7 +349,7 @@ Return true if at least one measure, else false.
 #|
 A metadata predicate where it returns true if the input is a valid symbol following the CFL:
 metadata ::= time-signature key-signature clef 
-time-signature ::= integer "/" integer
+time-signature ::= integer integer
 key-signature ::= letter-accidental tonality
 tonality ::= major | minor
 letter ::= A | B | C | D | E | F | G
@@ -349,17 +360,18 @@ clef ::= treble | bass | alto | tenor | percussion
 (define (metadata? expr)
   (and
     (list? expr)
-    (= (length expr) 3)
-    (time-signature? (list-ref expr 0))
-    (key-signature? (list-ref expr 1))
-    (clef? (list-ref expr 2))))
+    (= (length expr) 4)
+    (time-signature? (sublist expr 0 2))
+    (key-signature? (list-ref expr 2))
+    (clef? (list-ref expr 3))))
 
 #|
-(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #t
-(metadata? (list "5/4" (list "D" "minor") "bass")) ; -> #t
-(metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t [TODO]
-(metadata? (list "2/4" (list "C#" "minor") "treble")) ; -> #t
-(metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
-(metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
-(metadata? (list "G#2" "A2)) ; -> #f
+(metadata? (list "3" "4" (list "F" "major") "bass")) ; -> #t
+(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #f
+(metadata? (list "5" "4" (list "D" "minor") "bass")) ; -> #t
+(metadata? (list "3" "4" (list "A#" "minor") "alto")) ; -> #t
+(metadata? (list "2" "4" (list "C#" "minor") "treble")) ; -> #t
+(metadata? (list "2" "4" (list "C#" "minor"))) ; -> #f
+(metadata? (list "2" "4" "C#" "minor" "treble")) ; -> #f
+(metadata? (list "G#2" "A2")) ; -> #f
 |#
