@@ -1,4 +1,4 @@
-; (load "~/Symbolic-System-Final-Project/src/predicates.scm")
+(load "predicates.scm")
 
 ; Returns whether the expression contains at least one incidence of "||".
 (define (contains-bar expr)
@@ -168,7 +168,7 @@
 (define (flatten-section lst)
     (map
         (lambda (sublist)
-            (list (first sublist) (cdr sublist)))
+            (cons (first sublist) (cdr sublist)))
     (apply append lst))) ; keep in a separate procedure to properly use apply
 
 #|
@@ -178,22 +178,48 @@
 ; -> #t
 |#
 
-
-; Applies a series of transformations to properly process a section expression.
+; Applies a series of transformations to properly process a section expression with tests below.
 (define (process-section string-expr)
     (flatten-section
         (propagate-metadata
             (separate-by-metadata
                 (separate-by-measure string-expr)))))
 
+; Whether a given string expression representing a measure has metadata.
+(define (has-metadata? string-expr) (metadata? (car string-expr)))
+
 #|
-(section? (process-section (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1) || (G#2 2) (A2 1))))) ; more test cases below
+(has-metadata? '(("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ; -> #t
+(has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
+|#
+
+; Properly handles whether there is metadata or not
+(define (process-measure string-expr)
+    (let
+        ((metadata (get-metadata string-expr))
+        (notes
+            (if (has-metadata? string-expr)
+            (cdr string-expr)
+            string-expr)))
+    (cons metadata notes)))
+
+; Combines "3" "4" in the metadata to "3/4"
+; Assumes well-formed input
+(define (combine-time string-expr)
+    (map (lambda (elem) (if
+        (and (list? elem) (> (length elem) 2) (number? (string->number (first elem))) (number? (string->number (second elem)))) ; has a time signature
+        (append (list (string-append (first elem) "/" (second elem))) (list-tail elem 2))
+        elem))
+    string-expr))
+
+#|
+(process-measure (combine-time (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1))))) ; -> (("3/4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
 |#
 
 ; Parses the expression into our music data types
 ; The main entry point for user input
 (define (parse expr)
-    (let ((string-expr (stringify-terms expr)))
+    (let ((string-expr (combine-time (stringify-terms expr))))
         (cond
             ((and
                 (string? (first string-expr))
@@ -201,10 +227,9 @@
                 string-expr) ; note (no further processing)
             ((contains-bar string-expr)
                 (process-section string-expr)) ; section (contains at least one "||")
-            (else (list (car string-expr) (cdr string-expr)))))) ; measure (split up metadata)
+            (else (process-measure string-expr))))) ; measure
 
 #|
-; note no quotes!
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
 

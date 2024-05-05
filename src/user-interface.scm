@@ -1,6 +1,5 @@
 ;; Load logic for session environment
 (load "environment.scm")
-;; generic add
 (load "predicates.scm")
 (load "parser.scm")
 (load "converter.scm")
@@ -363,11 +362,6 @@
 (define (get-measure-at-index i)
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
-
-(define (get-piece-body piece-name)
-  (if (null? piece-name)
-	#f ;; don't do anything
-	(lookup-variable-value piece-name session-environment)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modify Environment ;;;
@@ -909,3 +903,6 @@
 |#
 
 
+
+
+; TODO -- test with inferring measure's metadata from last measure when adding one

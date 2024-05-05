@@ -216,8 +216,6 @@ Return true if at least two notes and meta, else false.
 	   (check-elements (cdr expr)))
       #f))
 
-; TODO: check with Nhung (second or cdr for lines 200 and 201)
-
 #|
 (measure? (list
 	   (list "3" "4" (list "F" "major") "bass") ; meta
@@ -316,11 +314,18 @@ Return true if at least one measure, else false.
 	       #f)
 	   )))
 
+(define (time-signature? time)
+	(let ((ix (string-search-forward "/" time)))
+		(and
+			ix
+			(number? (string->number (substring time 0 ix)))
+			(number? (string->number (substring time (+ ix 1)))))))
+
 #|
 (time-signature? "4/4") ; -> #t
-(time-signature? "4/") ; -> #f
 (time-signature? "3/4") ; -> #t
-(time-signature? "12/8") ; -> #t 
+(time-signature? "12/8") ; -> #t
+(time-signature? "4/") ; -> #f
 |#
 
 (define (key-signature? key)
@@ -346,11 +351,14 @@ Return true if at least one measure, else false.
 
 
 ; these are getters for measures, not metadata
-(define (get-metadata measure)
-  (car measure))
 
-(define (get-time measure)
-  (caar measure))
+; may not actually be the metadata if the input has none
+(define (get-metadata measure)
+	(if (metadata? (car measure))
+		(car measure)
+		(car (get-last-measure))))
+
+(define (get-time measure) (caar measure))
 
 (define (get-key measure)
   (cadr (car measure)))
@@ -382,8 +390,9 @@ clef ::= treble | bass | alto | tenor | percussion
 
 #|
 (metadata? (list "3/4" (list "F" "major") "bass")) ; -> #t
+(metadata? (list "12/8" (list "F" "major") "bass")) ; -> #t
 (metadata? (list "5/4" (list "D" "minor") "bass")) ; -> #t
-(metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t [TODO]
+(metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t
 (metadata? (list "2/4" (list "C#" "minor") "treble")) ; -> #t
 (metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
 (metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f

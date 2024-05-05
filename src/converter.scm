@@ -1,7 +1,7 @@
 
 					; Generic add procedures
-(load "~/Symbolic-System-Final-Project/src/predicates.scm")
-(load "~/Symbolic-System-Final-Project/src/parser.scm")
+(load "predicates.scm")
+(load "parser.scm")
 ;; (define (default-convert expr)
 ;;   (error "Unknown expression type" expression))
 
