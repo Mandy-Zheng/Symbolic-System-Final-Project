@@ -219,6 +219,17 @@
     (display-message (list "Here is measure" measure-i "\n"
 			    measure)))
   'done)
+
+;; display the voice body given a piece-name and voice-name
+(define (get-voice-body! piece-name voice-name)
+  (let ((voice-body (get-voice-body piece-name voice-name)))
+    (display-message (list "Here's the voice" (car voice-body) "in" piece-name))
+    (display-measures (map (lambda (measure index)
+			     (list
+			      (string-append "Measure-" (number->string index))
+			      measure))
+			   (cadr voice-body) (iota (length (cadr voice-body))))))
+  'done)
  
 
 
@@ -288,6 +299,15 @@
 		(save-voice (delete-range current-body start-i end-i)))))))
   (get-current-voice-piece!))
 
+;; get the voice body, including the name given piece-name and voice-name
+(define (get-voice-body piece-name voice-name)
+  (let ((piece-body (get-piece-body piece-name)))  
+    (list-ref piece-body (find-index-by-first-element piece-body voice-name))))
+
+;; given a range and list, return the stuffs in the range
+(define (get-range lst start end)
+  (list-tail (list-head lst end) start))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -299,6 +319,11 @@
   (if (null? current-piece-name)
 	#f ;; don't do anything
         (lookup-variable-value current-piece-name session-environment)))
+
+(define (get-piece-body piece-name)
+  (if (null? piece-name)
+	#f ;; don't do anything
+    (lookup-variable-value piece-name session-environment)))
 
 ;; Get the current voice body with the voice name and list of measures
 (define (get-current-voice-body)
@@ -313,6 +338,11 @@
 (define (get-measure-at-index i)
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
+
+(define (get-piece-body piece-name)
+  (if (null? piece-name)
+	#f ;; don't do anything
+	(lookup-variable-value piece-name session-environment)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modify Environment ;;;
@@ -520,6 +550,45 @@
 	  (get-all-pieces-names!))))
   'done)
 
+						   
+;; merge logic
+
+;; can copy a whole voice given the piece-name, voice-name and insert the body
+;; into the current voice body at index insert-i
+(define (copy-voice-to-current-voice! piece-name voice-name insert-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (>= insert-i (length current-body))
+	    (< insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 0 to"
+			  (- (length current-body) 1)))
+	(begin
+	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
+	    (save-voice (insert-section-helper current-body
+					       voice-body insert-i))))))
+  (get-current-voice-piece!))
+
+
+
+(define (copy-section-to-current-voice! piece-name voice-name
+					measure-start-i measure-end-i
+					insert-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (>= insert-i (length current-body))
+	    (< insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 0 to"
+			  (- (length current-body) 1)))
+        (begin
+	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
+	    (let ((new-section (get-range voice-body measure-start-i measure-end-i)))
+	       (save-voice (insert-section-helper current-body
+					       new-section insert-i)))))))   
+  (get-current-voice-piece!))
+
+	  
+
+	  
 
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
@@ -668,13 +737,25 @@
 	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2")
 	     )))
 
+#|
+(measure? (list (list "4/4" (list "C" "major") "bass")
+		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
-
+(metadata? (list "4/4" (list "C" "major") "bass") )
+|#
 (get-current-piece!)
 (get-current-piece-body)
 
 
 (show-pdf!)
+#|
+
+(define-new-piece! 'twinkle1)
+(define-new-voice! 'new)
+
+(delete-voice! 'new)
+(copy-voice-to-piece! 'twinkle 'one 0)
+|#
 
 #|
 (edit-note! 0 3 (list "A4" "300"))
