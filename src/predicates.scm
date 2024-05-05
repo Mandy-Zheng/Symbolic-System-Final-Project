@@ -1,3 +1,4 @@
+
 (define (print . args)
   (let lp ((statement args))
     (if (not (= (length statement) 0))
@@ -14,15 +15,15 @@
 #|
 An accidental predicate where it returns true if the symbol is '# or 'b.
 |#
-(define (accidentals? expr)
+(define (single-accidentals? expr)
   (or (string=? expr sharp)
       (string=? expr flat))
   )
 #|
-(accidentals? "#") ;#t
-(accidentals? "b") ;#t
-(accidentals? "##") ;#f
-(accidentals? "###") ;#f
+(single-accidentals? "#") ;#t
+(single-accidentals? "b") ;#t
+(single-accidentals? "##") ;#f
+(single-accidentals? "###") ;#f
 |#
 
 #|
@@ -39,6 +40,9 @@ A double accidental predicate where it returns true if the symbol is '## or 'bb.
 (double-accidentals? "##") ; #t
 (double-accidentals? "bbb") ;#f
 |#
+
+(define (accidentals? expr)
+  (or (double-accidentals? expr) (single-accidentals? expr)))
 
 #|
 A letter predicate where it returns true if the symbol is a letter from A-G.
@@ -62,7 +66,7 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
 
 (define (get-accidentals pitch)
   (cond ((and (> (string-length pitch) 2) (double-accidentals? (substring pitch 1 3))) (substring pitch 1 3))
-	((accidentals? (substring pitch 1 2)) (substring pitch 1 2))
+	((single-accidentals? (substring pitch 1 2)) (substring pitch 1 2))
 	(else ""))
   )
 
@@ -112,8 +116,7 @@ octave ::= [0-9]+
 		 (let ((accidental-single (substring str 1 2))
 		       (possible-octave-2 (substring str 2 len))
 		       (possible-octave-3 (substring str 1 len)))
-		   ;(print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
-		   (if (and (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
+		   (if (and (letter? letter) (single-accidentals? accidental-single) (string->number possible-octave-2))
 		       #t
 		       (and (letter? letter) (number? possible-octave-3)))
 		   )
@@ -209,8 +212,8 @@ Return true if at least two notes and meta, else false.
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (second expr))) ;; at least two notes
-	   (check-elements (second expr)))
+      (and (<= 2 (length (cdr expr))) ;; at least two notes
+	   (check-elements (cdr expr)))
       #f))
 
 ; TODO: check with Nhung (second or cdr for lines 200 and 201)
@@ -298,13 +301,20 @@ Return true if at least one measure, else false.
 (clef? "trebel") ; -> #f
 |#
 
-
 (define (time-signature? time)
 	(and
-		(list? time)
-		(= (length time) 2)
-		(number? (string->number (first time)))
-		(number? (string->number (second time)))))
+	 (string? time)
+	 (>= (string-length time) 3)
+	 (let lp ((idx 0)
+		  (time-length (string-length time)))
+	 
+	   (if (< idx time-length)
+	       (if (string=? (substring time idx (+ idx 1)) "/")
+		   (and (string->number (substring time 0 idx)) (string->number (substring time (+ idx 1) time-length)))
+		   (lp (+ idx 1) time-length)
+		   )
+	       #f)
+	   )))
 
 (define (time-signature? time)
 	(let ((ix (string-search-forward "/" time)))
@@ -320,17 +330,15 @@ Return true if at least one measure, else false.
 (time-signature? "4/") ; -> #f
 |#
 
-
 (define (key-signature? key)
   (and
-    (= 2 (length key))
-    (if
-		(= (string-length (car key)) 1)
-		(letter? (car key))
-		(and
-			(letter? (char->name (string-ref (car key) 0)))
-			(and (accidentals? (substring (car key) 1)))))
-    (or (string=? "major" (cadr key)) (string=? "minor" (cadr key))))
+   (= 2 (length key))
+   (or (string=? "major" (cadr key)) (string=? "minor" (cadr key)))
+   (letter? (substring (car key) 0 1))
+   (if (> (string-length (car key)) 1)     
+       (accidentals? (substring (car key) 1))
+       #t)
+   )
   )
 
 #|
@@ -338,6 +346,7 @@ Return true if at least one measure, else false.
 (key-signature? (list "D" "minor")) ; -> #t
 (key-signature? (list "Ab" "minor")) ; -> #t
 (key-signature? (list "G#" "major")) ; -> #t
+(key-signature? (list "Gbb" "major")) ; -> #t
 (key-signature? (list "major")) ; -> #f
 (key-signature? (list "C")) ; -> #f
 |#
@@ -351,20 +360,7 @@ Return true if at least one measure, else false.
 		(car measure)
 		(car (get-last-measure))))
 
-; TODO: remove below!
-;;;
-; formatted as x/y
-;(define (get-time measure)
-;  (string-append (first measure) "/" (second measure)))
-
-#|
-(get-time (list "3" "4" (list "F" "major") "bass")) ; -> 3/4
-(get-time (list "12" "8" (list "F" "major") "bass")) ; -> 12/8
-|#
-
-;;;
-
-(define (get-time measure) (car measure))
+(define (get-time measure) (caar measure))
 
 (define (get-key measure)
   (cadr (car measure)))
@@ -403,4 +399,10 @@ clef ::= treble | bass | alto | tenor | percussion
 (metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
 (metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
 (metadata? (list "G#2" "A2")) ; -> #f
+|#
+
+#|
+(measure?  (list (list "4/4" (list "C" "major") "treble")              (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+
+(metadata?  (list "4/4" (list "C" "major") "treble")  )
 |#

@@ -93,7 +93,8 @@
 	 "2. (get-current-piece-name!) to see the current piece name."
 	 "3. (get-current-voice-piece!) to see the current voice for the current piece."
 	 "4. (get-current-piece!) to see the current curent."
-	 "5. (get-measure! measure-index) to see the measure at measure-index.")))
+	 "5. (get-measure! measure-index) to see the measure at measure-index for the current voice."
+	 "6. (get-voice-body! piece-name voice-name) to see the voice called voice-name for the piece called piece-name.")))
 
 (define (show-all-commands-for-notes!)
   (display-messages
@@ -106,14 +107,23 @@
 	 "1. (add! measure) to add a new measure to the current voice in the selected piece."
 	 "2. (insert! insert-i new-measure) to insert a new measure at index insert-i to the current voice in the selected piece."
 	 "3. (delete! measure-i) to delete the measure at measure-i for the current voice in the selected piece."
-	 "4. (edit-measure! measure-i new-measure) to edit the measure at index measure-i with the the new-measure for the current voice in the selected piece.")))
+	 "4. (edit-measure! measure-i new-measure) to edit the measure at index measure-i with the the new-measure for the current voice in the selected piece."
+	 "5.  (transpose-measure! steps measure-idx) to transpose the measure at measure-idx by steps.")))
 
 (define (show-all-commands-for-sections!)
   (display-messages
-   (list "Here are all of the commands for dealing with sections:"           "1. (add! section) to add a new section to the current voice in the selected piece."
+   (list "Here are all of the commands for dealing with sections:"
+         "1. (add! section) to add a new section to the current voice in the selected piece."
 	 "2. (insert! insert-i new-section) to insert a new section at index insert-i to the current voice in the selected piece."
 	 "3. (delete! start-i end-i) to delete the measures in the range of [start_i, end_i] for the current voice in the selected piece."
-	 "4. (get-measure! measure-index) to see the measure at measure-index.")))
+	 "4. (get-measure! measure-index) to see the measure at measure-index."
+	 "5. (edit-section! measure-start measure-end new-measures) to edit the measures in the range of measure-start and measure-end in the current voice."
+	 "6. (transpose-section! steps measure-start measure-end) to transpose the section with steps for measures in the range of measure-start and measure-end in the current voice."
+	 "7. (copy-section-to-current-voice! piece-name voice-name
+					measure-start-i measure-end-i
+					insert-i) to copy the section from another piece and paste it to the current voice at index insert-i."
+	 )))
+
 
 
 (define (show-all-commands-for-voice!)
@@ -122,7 +132,10 @@
 	 "1. (define-new-voice! voice-name) to create a new voice."
 	 "2. (delete-voice! voice-name) to delete the voice with the name voice-name for the current piece."
 	 "3. (switch-voice! new-voice) to switch to a new voice in the current piece."
-	 "4. (get-current-voice-piece!) to see the current voice for the current piece.")))
+	 "4. (get-current-voice-piece!) to see the current voice for the current piece."
+	 "5. (copy-voice-to-current-voice! piece-name voice-name insert-i) to copy a voice from a selected piece to paste itto the current voice at index insert-i"
+	 "6. (get-voice-body! piece-name voice-name) to see the voice called voice-name for the piece called piece-name." 
+	 )))
 
 
 (define (show-all-commands-for-piece!)
@@ -134,6 +147,17 @@
 	 "4. (get-all-pieces-names!) to see the names of all current pieces."
 	 "5. (get-current-piece-name!) to see the current piece name.")))
 
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Helper Functions to Modidy Global vars ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; reset  current-voice-name and index because piece was changed
+(define (reset-voice-vars)
+  (set! current-voice-name '())
+  (set! current-voice-index '()))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,7 +186,7 @@
 	  (display-message (list "Here's your current voice" (car voice-body)))
 	  (display-measures (map (lambda (measure index)
 			           (list
-				    (string-append "Measure-" (number->string index))
+				    (string-append "Measure-" (number->string (+ 1 index)))
 				    measure))
 				 (cadr voice-body) (iota (length (cadr voice-body))))))))
   'done)
@@ -179,7 +203,7 @@
 			  (let ((all-measures    
 			     	(map (lambda (measure index)
 				       (list
-					(string-append "Measure-" (number->string index))
+					(string-append "Measure-" (number->string (+ 1 index)))
 					measure))
 				     (cadr voice) (iota (length (cadr voice))))))
 			    (display-message (list "Voice" (car voice)))
@@ -189,13 +213,25 @@
 		    body (iota (length body))))))
   'done)
 
-
+;; display the measure in the current voice
 (define (get-measure! measure-i)
   (let ((measure (get-measure-at-index measure-i)))
-    (display-message (list "Here is measure" measure-i "\n"
+    (display-message (list "Here is measure" (- measure-i 1) "\n"
 			    measure)))
   'done)
- 
+
+;; display the voice body given a piece-name and voice-name
+(define (get-voice-body! piece-name voice-name)
+  (let ((voice-body (get-voice-body piece-name voice-name)))
+    (display-message (list "Here's the voice" (car voice-body) "in" piece-name))
+    (display-measures (map (lambda (measure index)
+			     (list
+			      (string-append "Measure-" (number->string (+ 1 index)))
+			      measure))
+			   (cadr voice-body) (iota (length (cadr voice-body))))))
+  'done)
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -264,6 +300,15 @@
 		(save-voice (delete-range current-body start-i end-i)))))))
   (get-current-voice-piece!))
 
+;; get the voice body, including the name given piece-name and voice-name
+(define (get-voice-body piece-name voice-name)
+  (let ((piece-body (get-piece-body piece-name)))  
+    (list-ref piece-body (find-index-by-first-element piece-body voice-name))))
+
+;; given a range and list, return the stuffs in the range
+(define (get-range lst start end)
+  (list-tail (list-head lst (+ end 1)) start))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -275,6 +320,11 @@
   (if (null? current-piece-name)
 	#f ;; don't do anything
         (lookup-variable-value current-piece-name session-environment)))
+
+(define (get-piece-body piece-name)
+  (if (null? piece-name)
+	#f ;; don't do anything
+    (lookup-variable-value piece-name session-environment)))
 
 ;; Get the current voice body with the voice name and list of measures
 (define (get-current-voice-body)
@@ -289,11 +339,6 @@
 (define (get-measure-at-index i)
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
-
-;; Return the last measure of the current-voice
-(define (get-last-measure)
-  (let ((voice-body (get-current-voice-measures)))
-    (list-ref voice-body (- (length (voice-body)) 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modify Environment ;;;
@@ -378,53 +423,95 @@
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((current-body (get-current-voice-measures)))
-    (if (or (>= insert-i (length current-body))
-	    (< insert-i 0))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
 	(display-message (list
-			  "The index is out of range. Please select from 0 to"
-			  (- (length current-body) 1)))
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
 	(if (measure? new-content)
-	    (save-voice (insert-at insert-i new-content current-body))
+	    (save-voice (insert-at (- insert-i 1) new-content current-body))
 	    (save-voice (insert-section-helper current-body
-					       new-content insert-i)))))   
+					       new-content (- insert-i 1))))))   
   (get-current-voice-piece!))
 
 
 (define (delete! . indices)
   (if (= 1 (length indices)) ;; by measure
-      (delete-measure (car indices))
+      (delete-measure (- (car indices) 1))
       (if (> (length indices) 2)
 	  (display-message (list "Please input 1 or 2 indices only."))
-	  (delete-section (car indices) (cadr indices)))))
+	  (delete-section (- (car indices) 1) (- (cadr indices) 1)))))
 
 		 
 ;; Given the index of the measure, replace it with the new one.
 (define (edit-measure! index new-measure)
   (let ((current-body (get-current-voice-measures)))
     (save-voice (map (lambda (measure i)
-		      (if (= index i)
+		      (if (= (- index 1) i)
 			  new-measure
 			  measure))
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
+;; replace measure measure-start (inclusive) to measure measure-end (inclusive) with list of new measures
+
+
+(define (edit-section! measure-start measure-end new-measures)
+  (let ((current-body (get-current-voice-measures))
+	(max-edit-length (- measure-end measure-start) ))
+    (let ((front (list-head current-body (- measure-start 1)))
+      (end (list-tail current-body measure-end)))
+      (if (or (<= measure-start 0) (> measure-end (length current-body)))
+	  (error "Invalid Measure Numbers")
+	  )
+      (save-voice (append front new-measures end))
+      (get-current-voice-piece!))))
+
+
+;; parsing numbers as numbers or as strings?
+(define (edit-clef! measure-start measure-end new-clef)
+  (if (clef? new-clef)
+      (let ((measures (get-current-voice-measures))
+	    (editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
+	(if (and (> measure-start 0) (<= measure-end (length measures)))
+	    (edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) (get-key measure) new-clef) (cdr measure))) editing-measures))
+	    (error "Invalid Measure Numbers")
+	    )
+	)
+      (error "Invalid Clef"))
+  )
+
+(define (edit-key! measure-start measure-end new-key)
+  (if (key-signature? new-key)
+      (let ((measures (get-current-voice-measures))
+	    (editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
+	(if (and (> measure-start 0) (<= measure-end (length measures)))
+	    (edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) new-key (get-clef measure)) (cdr measure))) editing-measures))
+	    (error "Invalid Measure Numbers")
+	    )
+	)
+      (error "Invalid Clef"))
+  )
+
+
+
 ;; given the index of the measure, index of the note, replace with it with the new one
 (define (edit-note! measure-i note-i new-note)
-  (let ((measure-body (get-measure-at-index measure-i)))
+  (let ((measure-body (get-measure-at-index (- measure-i 1))))
     (if (not measure-body)
 	(display-message (list "Please select a valid index for the measure."))
 	(begin
-	  (if (or (>= note-i (length (cdr measure-body)))
-		  (< note-i 0))
+	  (if (or (> note-i (length (cdr measure-body)))
+		  (<= note-i 0))
 	      (display-message
-	       (list "Please select a valid index for note in the range of 0 to"
-		     (- (length (cdr measure-body)) 1)))  
+	       (list "Please select a valid index for note in the range of 1 to"
+		     (length (cdr measure-body))))  
 	      (save-measure (map (lambda (note i)
-				   (if (= (- i 1) note-i) ;; skipping meta
+				   (if (= (- i 1) (- note-i 1)) ;; skipping meta
 				       new-note
 				       note))
 				 measure-body (iota (length measure-body)))
-			    measure-i)))))
+			    (- measure-i 1))))))
     (get-current-voice-piece!))
 
 ;; switching logic
@@ -457,6 +544,55 @@
 	  (get-all-pieces-names!))))
   'done)
 
+						   
+;; merge logic
+
+;; can copy a whole voice given the piece-name, voice-name and insert the body
+;; into the current voice body at index insert-i
+(define (copy-voice-to-current-voice! piece-name voice-name insert-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
+	(begin
+	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
+	    (save-voice (insert-section-helper current-body
+					       voice-body (- insert-i 1)))))))
+  (get-current-voice-piece!))
+
+
+
+(define (copy-section-to-current-voice! piece-name voice-name
+					measure-start-i measure-end-i
+					insert-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
+        (begin
+	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
+	    (let ((new-section (get-range voice-body (- measure-start-i 1) (- measure-end-i 1))))
+	       (save-voice (insert-section-helper current-body
+					       new-section (- insert-i 1))))))))   
+  (get-current-voice-piece!))
+
+;; TODO TEST 	  
+(define (transpose-measure! steps measure-idx)
+  (let ((old-measure (get-measure-at-index (- measure-idx 1))))
+    (edit-measure! measure-idx (transpose-measure steps old-measure))
+    )
+  )
+
+(define (transpose-section! steps measure-start measure-end)
+  (let ((old-section (get-range (get-current-voice-measures) (- measure-start 1) (- measure-end 1))))
+    (edit-section! measure-start measure-end (transpose-section steps old-section))
+    )
+  )
+
 
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
@@ -473,16 +609,48 @@
 (get-all-pieces-names!)
 (define-new-piece! 'twinkle)
 
-(define-new-voice! 'one)
+(define-new-voice! 'one) ;; what happens if you dont define a voice
 
 (get-all-pieces-names!)
 (get-current-piece!)
 
 
 (add! (list
-	   (list "test" 1) ; meta
+	   (list "4/4" (list "C" "major") "treble") ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
+
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "B4" "4")
+		 (list "A4" "4")
+		 (list "B3" "2"))))
+
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "Gb4" "8")
+		 (list "A4" "8")
+		 (list "C#" "3"))))
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "G4" "4")
+		 (list "Eb4" "2")
+		 (list "A3" "4"))))
+;; measure syntax 0 vs 1 TODO:
+(edit-section! 2 4 (list (list
+	   (list "3/4" (list "C" "major") "treble") ; meta
+	   (list (list "A4" "4")
+		 (list "Bb4" "2")
+		))
+	       (list
+	   (list "3/4" (list "C" "major") "treble") ; meta
+	   (list (list "G4" "4")
+		 (list "Eb4" "2")
+		 ))))
+
+(edit-clef! 2 4 "bass")
+
+(edit-key! 2 4 (list "F" "minor"))
 
 
 (add! (list
@@ -543,6 +711,7 @@
 (switch-piece! 'twinkle)
 |#
 
+#|
 ;; test with real content
 (start-composing! 'nhung) 
 (define-new-piece! 'twinkle)   
@@ -562,24 +731,46 @@
 (add!  (list (list "4/4" (list "C" "major") "bass")
 	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
-(insert! 0  (list (list "1/4" (list "C" "major") "bass")
+(insert! 5  (list (list "1/4" (list "C" "major") "bass")
 		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
+(edit-section! 1 2 (list (list (list "1/4" (list "C" "major") "bass")
+			 (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+	       (list (list "1/4" (list "C" "major") "bass")
+		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
+
+(delete! 3 5)
+
 ; add section
-(add! (list
+(insert! 2 (list
        (list (list "4/4" (list "C" "major") "bass")
-	    (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+	    (list "A4" "4") (list "A4" "4") (list "A4" "A4" "2") )
        (list (list "4/4" (list "C" "major") "bass")
-	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2")
+	     (list "B4" "4") (list "B4" "4") (list "B4" "B4" "2")
 	     )))
 
+(edit-measure! 1 (list
+		  (list "4/4" (list "C" "major") "bass") ; meta
+		  (list (list "A#4" "Bb3" "2")
+			(list "G#2" "Bb1" "2"))))
 
+(edit-note! 1 1 (list "A4" "2"))  
+|#
+#|
+(measure? (list (list "4/4" (list "C" "major") "bass")
+		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
-(get-current-piece!)
-(get-current-piece-body)
+(metadata? (list "4/4" (list "C" "major") "bass") )
+|#
 
+#|
 
-(show-pdf!)
+(define-new-piece! 'twinkle1)
+(define-new-voice! 'new)
+
+(delete-voice! 'new)
+(copy-voice-to-piece! 'twinkle 'one 0)
+|#
 
 #|
 (edit-note! 0 3 (list "A4" "300"))
@@ -619,7 +810,7 @@
 |#
 
 
-
+#|
 (define (edit-metadata-time time measure-start measure-end measure-list)
   (let ((measure-list measure-list #|(get-current-voice|#)
 	(start-idx (- measure-start 1))
@@ -630,7 +821,6 @@
 	  (front (list-head measure-list start-idx))
 	  (end (list-tail measure-list measure-end))
 	  )
-      (print (length edit))
       ;;set voice to 
       (append front (map (lambda (measure) (list (list time (get-key measure) (get-clef measure)) (cdr measure))) edit) end)
     )
@@ -664,14 +854,13 @@
 	  (front (list-head measure-list start-idx))
 	  (end (list-tail measure-list measure-end))
 	  )
-      (print (length edit))
       ;;set voice to 
       (append front (map (lambda (measure) (list (list (get-time measure) (get-key measure) clef) (cdr measure))) edit) end)
     )
   )
 )
 
-#|
+
 (edit-metadata-clef "treble" 2 3 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
@@ -687,7 +876,10 @@
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     ))
+
 |#
+
+
 
 
 ; TODO -- test with inferring measure's metadata from last measure when adding one
