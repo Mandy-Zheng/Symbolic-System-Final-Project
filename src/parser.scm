@@ -198,6 +198,9 @@
 (has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
+(define ())
+
+
 ; TODO -> wrapping of notes happens Here
 ; TODO -> also fix with section (lists of measures) and update test cases (start with parse and then work way up)
 ; Properly handles whether there is metadata or not

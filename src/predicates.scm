@@ -306,13 +306,18 @@ Return true if at least one measure, else false.
 		(number? (string->number (first time)))
 		(number? (string->number (second time)))))
 
+(define (time-signature? time)
+	(let ((ix (string-search-forward "/" time)))
+		(and
+			ix
+			(number? (string->number (substring time 0 ix)))
+			(number? (string->number (substring time (+ ix 1)))))))
+
 #|
-(time-signature? (list "4" "4")) ; -> #t
-(time-signature? (list "4")) ; -> #f
-(time-signature? "4/4") ; -> #f
+(time-signature? "4/4") ; -> #t
+(time-signature? "3/4") ; -> #t
+(time-signature? "12/8") ; -> #t
 (time-signature? "4/") ; -> #f
-(time-signature? (list "3" "4")) ; -> #t
-(time-signature? (list "12" "8")) ; -> #t
 |#
 
 
@@ -346,14 +351,20 @@ Return true if at least one measure, else false.
 		(car measure)
 		(car (get-last-measure))))
 
+; TODO: remove below!
+;;;
 ; formatted as x/y
-(define (get-time measure)
-  (string-append (first measure) "/" (second measure)))
+;(define (get-time measure)
+;  (string-append (first measure) "/" (second measure)))
 
 #|
 (get-time (list "3" "4" (list "F" "major") "bass")) ; -> 3/4
 (get-time (list "12" "8" (list "F" "major") "bass")) ; -> 12/8
 |#
+
+;;;
+
+(define (get-time measure) (car measure))
 
 (define (get-key measure)
   (cadr (car measure)))
@@ -378,18 +389,17 @@ clef ::= treble | bass | alto | tenor | percussion
 (define (metadata? expr)
   (and
     (list? expr)
-    (= (length expr) 4)
-    (time-signature? (sublist expr 0 2))
-    (key-signature? (list-ref expr 2))
-    (clef? (list-ref expr 3))))
+    (= (length expr) 3)
+    (time-signature? (list-ref expr 0))
+    (key-signature? (list-ref expr 1))
+    (clef? (list-ref expr 2))))
 
 #|
-(metadata? (list "3" "4" (list "F" "major") "bass")) ; -> #t
-(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #f
-(metadata? (list "5" "4" (list "D" "minor") "bass")) ; -> #t
-(metadata? (list "3" "4" (list "A#" "minor") "alto")) ; -> #t
-(metadata? (list "2" "4" (list "C#" "minor") "treble")) ; -> #t
-(metadata? (list "2" "4" (list "C#" "minor"))) ; -> #f
-(metadata? (list "2" "4" "C#" "minor" "treble")) ; -> #f
+(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #t
+(metadata? (list "5/4" (list "D" "minor") "bass")) ; -> #t
+(metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t
+(metadata? (list "2/4" (list "C#" "minor") "treble")) ; -> #t
+(metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
+(metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
 (metadata? (list "G#2" "A2")) ; -> #f
 |#
