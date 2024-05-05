@@ -427,7 +427,6 @@
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
-<<<<<<< HEAD
 ;; replace measure measure-start (inclusive) to measure measure-end (not inclusive) with list of new measures
 
 
