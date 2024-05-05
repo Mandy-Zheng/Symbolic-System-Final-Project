@@ -124,7 +124,7 @@
 (define (reset-voice-vars)
   (set! current-voice-name '())
   (set! current-voice-index '()))
-
+7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Getter/Commands for users: display stuffs for users ;;;
@@ -243,6 +243,48 @@
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
+;; replace measure measure-start (inclusive) to measure measure-end (not inclusive) with list of new measures
+
+
+(define (edit-section! measure-start measure-end new-measures)
+  (let ((current-body (get-current-voice-measures))
+	(max-edit-length (- measure-end measure-start) ))
+    (let ((front (list-head current-body (- measure-start 1)))
+      (end (list-tail current-body (- measure-end 1)))
+      )
+      (if (or (<= measure-start 0) (> measure-end (length measures)))
+	  (error "Invalid Measure Numbers")
+	  )
+      (save-voice (append front new-measures end))
+      (get-current-voice-piece!))))
+
+
+;; parsing numbers as numbers or as strings?
+(define (edit-clef! measure-start measure-end new-clef)
+  (if (clef? new-clef)
+      (let ((measures (get-current-voice-measures))
+	    (editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
+	(if (and (> measure-start 0) (<= measure-end (length measures)))
+	    (edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) (get-key measure) new-clef) (cdr measure))) editing-measures))
+	    (error "Invalid Measure Numbers")
+	    )
+	)
+      (error "Invalid Clef"))
+  )
+
+(define (edit-key! measure-start measure-end new-key)
+  (if (key-signature? new-key)
+      (let ((measures (get-current-voice-measures))
+	    (editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
+	(if (and (> measure-start 0) (<= measure-end (length measures)))
+	    (edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) new-key (get-clef measure)) (cdr measure))) editing-measures))
+	    (error "Invalid Measure Numbers")
+	    )
+	)
+      (error "Invalid Clef"))
+  )
+
+
 (define (switch-voice! new-voice)
   (let ((new-voice-i (find-index-by-first-element (get-current-piece-body) new-voice)))
     (if new-voice-i
@@ -289,16 +331,48 @@
 (get-all-pieces-names!)
 (define-new-piece! 'twinkle)
 
-(define-new-voice! 'one)
+(define-new-voice! 'one) ;; what happens if you dont define a voice
 
 (get-all-pieces-names!)
 (get-current-piece!)
 
 
 (add! (list
-	   (list "test" 1) ; meta
+	   (list "4/4" (list "C" "major") "treble") ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2"))))
+
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "B4" "4")
+		 (list "A4" "4")
+		 (list "B3" "2"))))
+
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "Gb4" "8")
+		 (list "A4" "8")
+		 (list "C#" "3"))))
+(add! (list
+	   (list "4/4" (list "C" "major") "treble") ; meta
+	   (list (list "G4" "4")
+		 (list "Eb4" "2")
+		 (list "A3" "4"))))
+;; measure syntax 0 vs 1 TODO:
+(edit-section! 2 4 (list (list
+	   (list "3/4" (list "C" "major") "treble") ; meta
+	   (list (list "A4" "4")
+		 (list "Bb4" "2")
+		))
+	       (list
+	   (list "3/4" (list "C" "major") "treble") ; meta
+	   (list (list "G4" "4")
+		 (list "Eb4" "2")
+		 ))))
+
+(edit-clef! 2 4 "bass")
+
+(edit-key! 2 4 (list "F" "minor"))
 
 
 (add! (list
@@ -401,7 +475,7 @@
 |#
 
 
-
+#|
 (define (edit-metadata-time time measure-start measure-end measure-list)
   (let ((measure-list measure-list #|(get-current-voice|#)
 	(start-idx (- measure-start 1))
@@ -412,7 +486,6 @@
 	  (front (list-head measure-list start-idx))
 	  (end (list-tail measure-list measure-end))
 	  )
-      (print (length edit))
       ;;set voice to 
       (append front (map (lambda (measure) (list (list time (get-key measure) (get-clef measure)) (cdr measure))) edit) end)
     )
@@ -446,7 +519,6 @@
 	  (front (list-head measure-list start-idx))
 	  (end (list-tail measure-list measure-end))
 	  )
-      (print (length edit))
       ;;set voice to 
       (append front (map (lambda (measure) (list (list (get-time measure) (get-key measure) clef) (cdr measure))) edit) end)
     )
@@ -469,3 +541,7 @@
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     ))
+
+|#
+
+

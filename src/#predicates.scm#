@@ -14,10 +14,12 @@
 #|
 An accidental predicate where it returns true if the symbol is '# or 'b.
 |#
+
 (define (accidentals? expr)
   (or (string=? expr sharp)
       (string=? expr flat))
   )
+
 #|
 (accidentals? "#") ;#t
 (accidentals? "b") ;#t
