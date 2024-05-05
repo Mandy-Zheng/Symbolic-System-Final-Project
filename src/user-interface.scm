@@ -84,7 +84,10 @@
 	 "3. (show-all-commands-for-voice!) to see all commands for dealing with voices."
 	 "4. (show-all-commands-for-sections!) to see all commands for dealing with sections."
 	 "5. (show-all-commands-for-measures!) to see all commands for dealing with measures."
-	 "6. (show-all-commands-for-notes!) to see all commands for dealing with notes.")))
+	 "6. (show-all-commands-for-notes!) to see all commands for dealing with notes."
+	 "7. (note-example!) to see an example of a note."
+	 "8. (measure-example!) to see an example of a measure."
+	 "9. (section-example!) to see an example of a section.")))
 
 
 (define (show-all-display-commands!)
@@ -148,6 +151,26 @@
 	 "4. (get-all-pieces-names!) to see the names of all current pieces."
 	 "5. (get-current-piece-name!) to see the current piece name.")))
 
+
+(define (note-example!)
+  (display-messages
+   (list "A note is made of a pitch and a duration. Each pitch contains a letter, an optional accidental, and an octave."
+	 "Here are some examples:"
+	 "1. (A#3 2)"
+	 "2. (Cbb3 2)"
+	 "3. (F##7 1)")))
+
+(define (measure-example!)      
+  (display-messages (list "A measure is made of a meta data and a list of notes."
+		    "Here is an example:"
+		    " '((3 4 (F major) bass) (G#2 2) (A2 1))"))) 
+
+
+(define (section-example!)    
+  (display-messages (list "A measure is made of list of measures. Each separated by ||."
+		    "Here are some examples:"
+		    "1. '((3 4 (F major) bass) (G#2 2) (A2 1) || (G#2 2) (A2 1))))"
+		    "2. '(((3 4 (F major) bass) (G#2 2) (A2 1)) || ((3 4 (F major) bass) (G#2 2) (A2 1))")))
 
 
 
