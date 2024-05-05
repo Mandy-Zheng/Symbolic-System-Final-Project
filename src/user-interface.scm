@@ -186,7 +186,7 @@
 	  (display-message (list "Here's your current voice" (car voice-body)))
 	  (display-measures (map (lambda (measure index)
 			           (list
-				    (string-append "Measure-" (number->string index))
+				    (string-append "Measure-" (number->string (+ 1 index)))
 				    measure))
 				 (cadr voice-body) (iota (length (cadr voice-body))))))))
   'done)
@@ -203,7 +203,7 @@
 			  (let ((all-measures    
 			     	(map (lambda (measure index)
 				       (list
-					(string-append "Measure-" (number->string index))
+					(string-append "Measure-" (number->string (+ 1 index)))
 					measure))
 				     (cadr voice) (iota (length (cadr voice))))))
 			    (display-message (list "Voice" (car voice)))
@@ -216,7 +216,7 @@
 
 (define (get-measure! measure-i)
   (let ((measure (get-measure-at-index measure-i)))
-    (display-message (list "Here is measure" measure-i "\n"
+    (display-message (list "Here is measure" (- measure-i 1) "\n"
 			    measure)))
   'done)
 
@@ -226,7 +226,7 @@
     (display-message (list "Here's the voice" (car voice-body) "in" piece-name))
     (display-measures (map (lambda (measure index)
 			     (list
-			      (string-append "Measure-" (number->string index))
+			      (string-append "Measure-" (number->string (+ 1 index)))
 			      measure))
 			   (cadr voice-body) (iota (length (cadr voice-body))))))
   'done)
@@ -306,7 +306,7 @@
 
 ;; given a range and list, return the stuffs in the range
 (define (get-range lst start end)
-  (list-tail (list-head lst end) start))
+  (list-tail (list-head lst (+ end 1)) start))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
@@ -427,46 +427,45 @@
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((current-body (get-current-voice-measures)))
-    (if (or (>= insert-i (length current-body))
-	    (< insert-i 0))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
 	(display-message (list
-			  "The index is out of range. Please select from 0 to"
-			  (- (length current-body) 1)))
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
 	(if (measure? new-content)
-	    (save-voice (insert-at insert-i new-content current-body))
+	    (save-voice (insert-at (- insert-i 1) new-content current-body))
 	    (save-voice (insert-section-helper current-body
-					       new-content insert-i)))))   
+					       new-content (- insert-i 1))))))   
   (get-current-voice-piece!))
 
 
 (define (delete! . indices)
   (if (= 1 (length indices)) ;; by measure
-      (delete-measure (car indices))
+      (delete-measure (- (car indices) 1))
       (if (> (length indices) 2)
 	  (display-message (list "Please input 1 or 2 indices only."))
-	  (delete-section (car indices) (cadr indices)))))
+	  (delete-section (- (car indices) 1) (- (cadr indices) 1)))))
 
 		 
 ;; Given the index of the measure, replace it with the new one.
 (define (edit-measure! index new-measure)
   (let ((current-body (get-current-voice-measures)))
     (save-voice (map (lambda (measure i)
-		      (if (= index i)
+		      (if (= (- index 1) i)
 			  new-measure
 			  measure))
 		      current-body (iota (length current-body)))))
   (get-current-voice-piece!))
 
-;; replace measure measure-start (inclusive) to measure measure-end (not inclusive) with list of new measures
+;; replace measure measure-start (inclusive) to measure measure-end (inclusive) with list of new measures
 
 
 (define (edit-section! measure-start measure-end new-measures)
   (let ((current-body (get-current-voice-measures))
 	(max-edit-length (- measure-end measure-start) ))
     (let ((front (list-head current-body (- measure-start 1)))
-      (end (list-tail current-body (- measure-end 1)))
-      )
-      (if (or (<= measure-start 0) (> measure-end (length measures)))
+      (end (list-tail current-body measure-end)))
+      (if (or (<= measure-start 0) (> measure-end (length current-body)))
 	  (error "Invalid Measure Numbers")
 	  )
       (save-voice (append front new-measures end))
@@ -502,21 +501,21 @@
 
 ;; given the index of the measure, index of the note, replace with it with the new one
 (define (edit-note! measure-i note-i new-note)
-  (let ((measure-body (get-measure-at-index measure-i)))
+  (let ((measure-body (get-measure-at-index (- measure-i 1))))
     (if (not measure-body)
 	(display-message (list "Please select a valid index for the measure."))
 	(begin
-	  (if (or (>= note-i (length (cdr measure-body)))
-		  (< note-i 0))
+	  (if (or (> note-i (length (cdr measure-body)))
+		  (<= note-i 0))
 	      (display-message
-	       (list "Please select a valid index for note in the range of 0 to"
-		     (- (length (cdr measure-body)) 1)))  
+	       (list "Please select a valid index for note in the range of 1 to"
+		     (length (cdr measure-body))))  
 	      (save-measure (map (lambda (note i)
-				   (if (= (- i 1) note-i) ;; skipping meta
+				   (if (= (- i 1) (- note-i 1)) ;; skipping meta
 				       new-note
 				       note))
 				 measure-body (iota (length measure-body)))
-			    measure-i)))))
+			    (- measure-i 1))))))
     (get-current-voice-piece!))
 
 ;; switching logic
@@ -556,15 +555,15 @@
 ;; into the current voice body at index insert-i
 (define (copy-voice-to-current-voice! piece-name voice-name insert-i)
   (let ((current-body (get-current-voice-measures)))
-    (if (or (>= insert-i (length current-body))
-	    (< insert-i 0))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
 	(display-message (list
-			  "The index is out of range. Please select from 0 to"
-			  (- (length current-body) 1)))
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
 	(begin
 	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
 	    (save-voice (insert-section-helper current-body
-					       voice-body insert-i))))))
+					       voice-body (- insert-i 1)))))))
   (get-current-voice-piece!))
 
 
@@ -573,16 +572,16 @@
 					measure-start-i measure-end-i
 					insert-i)
   (let ((current-body (get-current-voice-measures)))
-    (if (or (>= insert-i (length current-body))
-	    (< insert-i 0))
+    (if (or (> insert-i (length current-body))
+	    (<= insert-i 0))
 	(display-message (list
-			  "The index is out of range. Please select from 0 to"
-			  (- (length current-body) 1)))
+			  "The index is out of range. Please select from 1 to"
+			  (length current-body)))
         (begin
 	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
-	    (let ((new-section (get-range voice-body measure-start-i measure-end-i)))
+	    (let ((new-section (get-range voice-body (- measure-start-i 1) (- measure-end-i 1))))
 	       (save-voice (insert-section-helper current-body
-					       new-section insert-i)))))))   
+					       new-section (- insert-i 1))))))))   
   (get-current-voice-piece!))
 
 	  
@@ -726,19 +725,31 @@
 (add!  (list (list "4/4" (list "C" "major") "bass")
 	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
-(insert! 0  (list (list "1/4" (list "C" "major") "bass")
+(insert! 5  (list (list "1/4" (list "C" "major") "bass")
 		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
+(edit-section! 1 2 (list (list (list "1/4" (list "C" "major") "bass")
+			 (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+	       (list (list "1/4" (list "C" "major") "bass")
+		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
+
+(delete! 3 5)
+
 ; add section
-(add! (list
+(insert! 2 (list
        (list (list "4/4" (list "C" "major") "bass")
-	    (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+	    (list "A4" "4") (list "A4" "4") (list "A4" "A4" "2") )
        (list (list "4/4" (list "C" "major") "bass")
-	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2")
+	     (list "B4" "4") (list "B4" "4") (list "B4" "B4" "2")
 	     )))
 
-|#
+(edit-measure! 1 (list
+		  (list "4/4" (list "C" "major") "bass") ; meta
+		  (list (list "A#4" "Bb3" "2")
+			(list "G#2" "Bb1" "2"))))
 
+(edit-note! 1 1 (list "A4" "2"))  
+|#
 #|
 (measure? (list (list "4/4" (list "C" "major") "bass")
 		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
@@ -843,7 +854,7 @@
   )
 )
 
-#|
+
 (edit-metadata-clef "treble" 2 3 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
