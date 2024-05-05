@@ -172,6 +172,18 @@ Return true if the symbol follows this pattern, else false.
 
 
 #|
+A bar predicate.
+|#
+(define (bar? expr) (equal? expr '||))
+
+#|
+(bar? '||) ; -> #t
+(bar? "||") ; -> #f
+(bar? 'a) ; -> #f
+|#
+
+
+#|
 Get a list of notes from the measure
 |#
 (define (get-notes-in-measure measure)
@@ -200,6 +212,8 @@ Return true if at least two notes and meta, else false.
       (and (<= 2 (length (second expr))) ;; at least two notes
 	   (check-elements (second expr)))
       #f))
+
+; TODO: check with Nhung (second or cdr for lines 200 and 201)
 
 #|
 (measure? (list
