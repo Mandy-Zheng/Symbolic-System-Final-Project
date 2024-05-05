@@ -94,7 +94,8 @@
 	 "2. (get-current-piece-name!) to see the current piece name."
 	 "3. (get-current-voice-piece!) to see the current voice for the current piece."
 	 "4. (get-current-piece!) to see the current curent."
-	 "5. (get-measure! measure-index) to see the measure at measure-index.")))
+	 "5. (get-measure! measure-index) to see the measure at measure-index for the current voice."
+	 "6. (get-voice-body! piece-name voice-name) to see the voice called voice-name for the piece called piece-name.")))
 
 (define (show-all-commands-for-notes!)
   (display-messages
@@ -107,14 +108,23 @@
 	 "1. (add! measure) to add a new measure to the current voice in the selected piece."
 	 "2. (insert! insert-i new-measure) to insert a new measure at index insert-i to the current voice in the selected piece."
 	 "3. (delete! measure-i) to delete the measure at measure-i for the current voice in the selected piece."
-	 "4. (edit-measure! measure-i new-measure) to edit the measure at index measure-i with the the new-measure for the current voice in the selected piece.")))
+	 "4. (edit-measure! measure-i new-measure) to edit the measure at index measure-i with the the new-measure for the current voice in the selected piece."
+	 "5.  (transpose-measure! steps measure-idx) to transpose the measure at measure-idx by steps.")))
 
 (define (show-all-commands-for-sections!)
   (display-messages
-   (list "Here are all of the commands for dealing with sections:"           "1. (add! section) to add a new section to the current voice in the selected piece."
+   (list "Here are all of the commands for dealing with sections:"
+         "1. (add! section) to add a new section to the current voice in the selected piece."
 	 "2. (insert! insert-i new-section) to insert a new section at index insert-i to the current voice in the selected piece."
 	 "3. (delete! start-i end-i) to delete the measures in the range of [start_i, end_i] for the current voice in the selected piece."
-	 "4. (get-measure! measure-index) to see the measure at measure-index.")))
+	 "4. (get-measure! measure-index) to see the measure at measure-index."
+	 "5. (edit-section! measure-start measure-end new-measures) to edit the measures in the range of measure-start and measure-end in the current voice."
+	 "6. (transpose-section! steps measure-start measure-end) to transpose the section with steps for measures in the range of measure-start and measure-end in the current voice."
+	 "7. (copy-section-to-current-voice! piece-name voice-name
+					measure-start-i measure-end-i
+					insert-i) to copy the section from another piece and paste it to the current voice at index insert-i."
+	 )))
+
 
 
 (define (show-all-commands-for-voice!)
@@ -123,7 +133,10 @@
 	 "1. (define-new-voice! voice-name) to create a new voice."
 	 "2. (delete-voice! voice-name) to delete the voice with the name voice-name for the current piece."
 	 "3. (switch-voice! new-voice) to switch to a new voice in the current piece."
-	 "4. (get-current-voice-piece!) to see the current voice for the current piece.")))
+	 "4. (get-current-voice-piece!) to see the current voice for the current piece."
+	 "5. (copy-voice-to-current-voice! piece-name voice-name insert-i) to copy a voice from a selected piece to paste itto the current voice at index insert-i"
+	 "6. (get-voice-body! piece-name voice-name) to see the voice called voice-name for the piece called piece-name." 
+	 )))
 
 
 (define (show-all-commands-for-piece!)
@@ -136,19 +149,7 @@
 	 "5. (get-current-piece-name!) to see the current piece name.")))
 
 
-;; Save the full body of the piece given the new body
-(define (save-body new-body)
-  (set-variable-value! current-piece-name new-body session-environment))
 
-;; Save the new voice body in the current piece
-(define (save-voice new-voice-body)
-  ;; call save-body with the new full content
-  (let ((current-body (get-current-piece-body))) ; full body
-    (save-body (map (lambda (voice index)
-		      (if (= index current-voice-index)
-			  (list current-voice-name new-voice-body) ;replace with new voice
-			  voice))
-		    current-body (iota (length current-body))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modidy Global vars ;;;
@@ -213,7 +214,7 @@
 		    body (iota (length body))))))
   'done)
 
-
+;; display the measure in the current voice
 (define (get-measure! measure-i)
   (let ((measure (get-measure-at-index measure-i)))
     (display-message (list "Here is measure" (- measure-i 1) "\n"
@@ -230,7 +231,8 @@
 			      measure))
 			   (cadr voice-body) (iota (length (cadr voice-body))))))
   'done)
- 
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
