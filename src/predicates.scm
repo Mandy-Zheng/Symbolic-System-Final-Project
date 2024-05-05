@@ -396,6 +396,7 @@ clef ::= treble | bass | alto | tenor | percussion
 
 #|
 (metadata? (list "3/4" (list "F" "major") "bass")) ; -> #t
+(metadata? (list "12/8" (list "F" "major") "bass")) ; -> #t
 (metadata? (list "5/4" (list "D" "minor") "bass")) ; -> #t
 (metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t
 (metadata? (list "2/4" (list "C#" "minor") "treble")) ; -> #t
