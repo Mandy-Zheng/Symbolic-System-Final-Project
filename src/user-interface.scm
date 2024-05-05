@@ -3,6 +3,7 @@
 (load "predicates.scm")
 (load "parser.scm")
 (load "converter.scm")
+(load "transpose.scm")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; global vars for each session ;;;
@@ -616,11 +617,14 @@
     )
   )
 
-
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
   (apply convert-piece (get-current-piece-body))
   (open-pdf "output"))
+
+(define (play-music!)
+  (apply convert-piece (get-current-piece-body))
+  (play-music "output"))
 
 
 #|
@@ -763,6 +767,7 @@
 		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
 
 (delete! 3 5)
+(transpose-section! -2 2 3)
 
 ; add section
 (insert! 2 (list
