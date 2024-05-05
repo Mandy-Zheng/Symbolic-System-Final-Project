@@ -112,7 +112,7 @@ octave ::= [0-9]+
 		 (let ((accidental-single (substring str 1 2))
 		       (possible-octave-2 (substring str 2 len))
 		       (possible-octave-3 (substring str 1 len)))
-		   (print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
+		   ;(print (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
 		   (if (and (letter? letter) (accidentals? accidental-single) (string->number possible-octave-2))
 		       #t
 		       (and (letter? letter) (number? possible-octave-3)))
@@ -150,7 +150,7 @@ A note predicate where it is represented by a pitch and then a duration for teh 
 Return true if the symbol follows this pattern, else false.
 |#
 (define (note? expr)
-  (print (>= (length expr)))
+  ; (print (>= (length expr)))
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
        (let lp ((expr expr))
 	 (if (= 1 (length expr))
@@ -168,6 +168,18 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "Cb3" "G##2")) ;#f
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
+|#
+
+
+#|
+A bar predicate.
+|#
+(define (bar? expr) (equal? expr '||))
+
+#|
+(bar? '||) ; -> #t
+(bar? "||") ; -> #f
+(bar? 'a) ; -> #f
 |#
 
 
@@ -197,19 +209,21 @@ Return true if at least two notes and meta, else false.
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (cadr expr))) ;; at least two notes
-	   (check-elements (cadr expr)))
+      (and (<= 2 (length (second expr))) ;; at least two notes
+	   (check-elements (second expr)))
       #f))
+
+; TODO: check with Nhung (second or cdr for lines 200 and 201)
 
 #|
 (measure? (list
-	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "3" "4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2")))) ;; #t
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "3" "4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")))) ; #f
 
 ;; no meta with 1 note only		
@@ -274,7 +288,9 @@ Return true if at least one measure, else false.
 ;;; Metadata
 
 (define (clef? clef)
-  (not (not (member clef (list "treble" "bass" "alto" "tenor" "percussion" "mezzo-soprano" "baritone" "soprano")))))
+  (let
+  	((res (member clef (list "treble" "bass" "alto" "tenor" "percussion"))))
+	(and res (list? res) (> (length res) 0))))
 
 #|
 (clef? "treble") ; -> #t
@@ -282,44 +298,58 @@ Return true if at least one measure, else false.
 (clef? "trebel") ; -> #f
 |#
 
-; TODO: fix for 12/8 (length-4 string) [see below]
+
 (define (time-signature? time)
-  (and
-    (= 3 (string-length time))
-    (char-numeric? (string-ref time 0))
-    (string=? (char->name (string-ref time 1)) "/")
-    (char-numeric? (string-ref time 2))))
+	(and
+		(list? time)
+		(= (length time) 2)
+		(number? (string->number (first time)))
+		(number? (string->number (second time)))))
 
 #|
-(time-signature? "4/4") ; -> #t
+(time-signature? (list "4" "4")) ; -> #t
+(time-signature? (list "4")) ; -> #f
+(time-signature? "4/4") ; -> #f
 (time-signature? "4/") ; -> #f
-(time-signature? "3/4") ; -> #t
-(time-signature? "12/8") ; -> #t [TODO]
+(time-signature? (list "3" "4")) ; -> #t
+(time-signature? (list "12" "8")) ; -> #t
 |#
 
 
-; TODO: fix for A# minor (see below)
 (define (key-signature? key)
   (and
     (= 2 (length key))
-    (letter? (car key))
+    (if
+		(= (string-length (car key)) 1)
+		(letter? (car key))
+		(and
+			(letter? (char->name (string-ref (car key) 0)))
+			(and (accidentals? (substring (car key) 1)))))
     (or (string=? "major" (cadr key)) (string=? "minor" (cadr key))))
   )
 
 #|
 (key-signature? (list "C" "major")) ; -> #t
 (key-signature? (list "D" "minor")) ; -> #t
-(key-signature? (list "Ab" "minor")) ; -> #t [TODO]
-(key-signature? (list "G#" "major")) ; -> #t [TODO]
+(key-signature? (list "Ab" "minor")) ; -> #t
+(key-signature? (list "G#" "major")) ; -> #t
 (key-signature? (list "major")) ; -> #f
 (key-signature? (list "C")) ; -> #f
 |#
+
+
 ; these are getters for measures, not metadata
 (define (get-metadata measure)
   (car measure))
 
+; formatted as x/y
 (define (get-time measure)
-  (caar measure))
+  (string-append (first measure) "/" (second measure)))
+
+#|
+(get-time (list "3" "4" (list "F" "major") "bass")) ; -> 3/4
+(get-time (list "12" "8" (list "F" "major") "bass")) ; -> 12/8
+|#
 
 (define (get-key measure)
   (cadr (car measure)))
@@ -333,7 +363,7 @@ Return true if at least one measure, else false.
 #|
 A metadata predicate where it returns true if the input is a valid symbol following the CFL:
 metadata ::= time-signature key-signature clef 
-time-signature ::= integer "/" integer
+time-signature ::= integer integer
 key-signature ::= letter-accidental tonality
 tonality ::= major | minor
 letter ::= A | B | C | D | E | F | G
@@ -344,17 +374,18 @@ clef ::= treble | bass | alto | tenor | percussion
 (define (metadata? expr)
   (and
     (list? expr)
-    (= (length expr) 3)
-    (time-signature? (list-ref expr 0))
-    (key-signature? (list-ref expr 1))
-    (clef? (list-ref expr 2))))
+    (= (length expr) 4)
+    (time-signature? (sublist expr 0 2))
+    (key-signature? (list-ref expr 2))
+    (clef? (list-ref expr 3))))
 
 #|
-(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #t
-(metadata? (list "5/4" (list "D" "minor") "bass")) ; -> #t
-(metadata? (list "3/4" (list "A#" "minor") "alto")) ; -> #t [TODO]
-(metadata? (list "2/4" (list "C#" "minor") "treble")) ; -> #t
-(metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
-(metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
-(metadata? (list "G#2" "A2)) ; -> #f
+(metadata? (list "3" "4" (list "F" "major") "bass")) ; -> #t
+(metadata? (list "3/4" (list "F" "major") "bass")) ; -> #f
+(metadata? (list "5" "4" (list "D" "minor") "bass")) ; -> #t
+(metadata? (list "3" "4" (list "A#" "minor") "alto")) ; -> #t
+(metadata? (list "2" "4" (list "C#" "minor") "treble")) ; -> #t
+(metadata? (list "2" "4" (list "C#" "minor"))) ; -> #f
+(metadata? (list "2" "4" "C#" "minor" "treble")) ; -> #f
+(metadata? (list "G#2" "A2")) ; -> #f
 |#
