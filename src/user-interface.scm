@@ -1,6 +1,5 @@
 ;; Load logic for session environment
 (load "environment.scm")
-;; generic add
 (load "predicates.scm")
 (load "parser.scm")
 (load "converter.scm")

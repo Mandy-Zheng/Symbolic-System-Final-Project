@@ -198,8 +198,6 @@
 (has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
-(define ())
-
 
 ; TODO -> wrapping of notes happens Here
 ; TODO -> also fix with section (lists of measures) and update test cases (start with parse and then work way up)
@@ -213,8 +211,18 @@
             string-expr)))
     (list metadata notes)))
 
+; Assumes well-formed input
+(define (combine-time string-expr)
+    (map (lambda (elem) (if
+        (and (list? elem) (> (length elem) 2) (number? (string->number (first elem))) (number? (string->number (second elem)))) ; has a time signature
+        (append (list (string-append (first elem) "/" (second elem))) (list-tail elem 2))
+        elem))
+    string-expr))
+
+; TODO -- for section and measure
+
 #|
-(process-measure (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1)))) ; -> (("3" "4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
+(process-measure (combine-time (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1))))) ; -> (("3" "4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
 |#
 
 ; Parses the expression into our music data types
@@ -228,7 +236,7 @@
                 string-expr) ; note (no further processing)
             ((contains-bar string-expr)
                 (process-section string-expr)) ; section (contains at least one "||")
-            (else (process-measure string-expr))))) ; measure
+            (else (process-measure (combine-time string-expr)))))) ; measure
 
 #|
 ; note no quotes!
