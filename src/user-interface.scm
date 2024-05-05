@@ -281,6 +281,10 @@
   (let ((piece-body (get-piece-body piece-name)))  
     (list-ref piece-body (find-index-by-first-element piece-body voice-name))))
 
+;; given a range and list, return the stuffs in the range
+(define (get-range lst start end)
+  (list-tail (list-head lst end) start))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -294,9 +298,9 @@
         (lookup-variable-value current-piece-name session-environment)))
 
 (define (get-piece-body piece-name)
-  (if (null? piece-name))
+  (if (null? piece-name)
 	#f ;; don't do anything
-    (lookup-variable-value piece-name session-environment))
+    (lookup-variable-value piece-name session-environment)))
 
 ;; Get the current voice body with the voice name and list of measures
 (define (get-current-voice-body)
@@ -484,7 +488,7 @@
 
 ;; can copy a whole voice given the piece-name, voice-name and insert the body
 ;; into the current voice body at index insert-i
-(define (copy-voice-to-piece! piece-name voice-name insert-i)
+(define (copy-voice-to-current-voice! piece-name voice-name insert-i)
   (let ((current-body (get-current-voice-measures)))
     (if (or (>= insert-i (length current-body))
 	    (< insert-i 0))
@@ -498,6 +502,26 @@
   (get-current-voice-piece!))
 
 
+
+(define (copy-section-to-current-voice! piece-name voice-name
+					measure-start-i measure-end-i
+					insert-i)
+  (let ((current-body (get-current-voice-measures)))
+    (if (or (>= insert-i (length current-body))
+	    (< insert-i 0))
+	(display-message (list
+			  "The index is out of range. Please select from 0 to"
+			  (- (length current-body) 1)))
+        (begin
+	  (let ((voice-body (cadr (get-voice-body piece-name voice-name))))
+	    (let ((new-section (get-range voice-body measure-start-i measure-end-i)))
+	       (save-voice (insert-section-helper current-body
+					       new-section insert-i)))))))   
+  (get-current-voice-piece!))
+
+	  
+
+	  
 
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
@@ -625,13 +649,14 @@
 
 
 (show-pdf!)
-
+#|
 
 (define-new-piece! 'twinkle1)
 (define-new-voice! 'new)
 
 (delete-voice! 'new)
 (copy-voice-to-piece! 'twinkle 'one 0)
+|#
 
 #|
 (edit-note! 0 3 (list "A4" "300"))
