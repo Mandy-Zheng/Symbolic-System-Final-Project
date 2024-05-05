@@ -274,46 +274,51 @@ Return true if at least one measure, else false.
 ;;; Metadata
 
 (define (clef? clef)
-  (not (not (member clef (list "treble" "bass" "alto" "tenor" "percussion")))))
+  (member clef (list "treble" "bass" "alto" "tenor" "percussion")))
 
 #|
-(clef? "treble") ; -> #t
-(clef? "alto") ; -> #t
+(clef? "treble") ; -> '("treble" "bass" "alto" "tenor" "percussion")
+(clef? "alto") ; -> '("alto" "tenor" "percussion")
 (clef? "trebel") ; -> #f
 |#
 
-; TODO: fix for 12/8 (length-4 string) [see below]
 (define (time-signature? time)
-  (and
-    (= 3 (string-length time))
-    (char-numeric? (string-ref time 0))
-    (string=? (char->name (string-ref time 1)) "/")
-    (char-numeric? (string-ref time 2))))
+	(let ((slash-index (and (string? time) (string-search-forward "/" time))))
+	(and
+		(number? (string->number (substring time 0 slash-index)))
+		(string=? (char->name (string-ref time slash-index)) "/")
+		(number? (string->number (substring time (+ slash-index 1)))))))
 
 #|
 (time-signature? "4/4") ; -> #t
 (time-signature? "4/") ; -> #f
 (time-signature? "3/4") ; -> #t
-(time-signature? "12/8") ; -> #t [TODO]
+(time-signature? "12/8") ; -> #t
 |#
 
 
-; TODO: fix for A# minor (see below)
 (define (key-signature? key)
   (and
     (= 2 (length key))
-    (letter? (car key))
+    (if
+		(= (string-length (car key)) 1)
+		(letter? (car key))
+		(and
+			(letter? (char->name (string-ref (car key) 0)))
+			(and (accidentals? (substring (car key) 1)))))
     (or (string=? "major" (cadr key)) (string=? "minor" (cadr key))))
   )
 
 #|
 (key-signature? (list "C" "major")) ; -> #t
 (key-signature? (list "D" "minor")) ; -> #t
-(key-signature? (list "Ab" "minor")) ; -> #t [TODO]
-(key-signature? (list "G#" "major")) ; -> #t [TODO]
+(key-signature? (list "Ab" "minor")) ; -> #t
+(key-signature? (list "G#" "major")) ; -> #t
 (key-signature? (list "major")) ; -> #f
 (key-signature? (list "C")) ; -> #f
 |#
+
+
 ; these are getters for measures, not metadata
 (define (get-metadata measure)
   (car measure))
