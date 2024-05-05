@@ -1,4 +1,4 @@
-(load "~/Symbolic-System-Final-Project/src/predicates.scm")
+; (load "~/Symbolic-System-Final-Project/src/predicates.scm")
 
 ; Returns whether the expression contains at least one incidence of "|".
 (define (contains-bar expr)

@@ -197,19 +197,19 @@ Return true if at least two notes and meta, else false.
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (cdr expr))) ;; at least two notes
-	   (check-elements (cdr expr)))
+      (and (<= 2 (length (second expr))) ;; at least two notes
+	   (check-elements (second expr)))
       #f))
 
 #|
 (measure? (list
-	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "3" "4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")
 		 (list "G#2" "Bb1" "2")))) ;; #t
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "3" "4" (list "F" "major") "bass") ; meta
 	   (list (list "A#4" "Bb3" "2")))) ; #f
 
 ;; no meta with 1 note only		
