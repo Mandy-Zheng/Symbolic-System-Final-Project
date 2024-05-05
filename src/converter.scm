@@ -173,14 +173,14 @@
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
-  (run-shell-command (string-append "emacs " (string-append file-path ".pdf")))) ;;see if it works on macs
+  (run-shell-command (string-append "open " (string-append file-path ".pdf")))) ;;see if it works on macs
 
 (define (play-music file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
   (run-shell-command (string-append "open " (string-append file-path ".midi")))) ;;see if it works on macs
 
 ;;output 
-(open-pdf "output")
+(play-music "output")
 
   
 #|
