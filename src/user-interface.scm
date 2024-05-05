@@ -689,3 +689,6 @@
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     ))
 |#
+
+
+; TODO -- test with inferring measure's metadata from last measure when adding one

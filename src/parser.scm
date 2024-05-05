@@ -190,11 +190,29 @@
 (section? (process-section (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1) || (G#2 2) (A2 1))))) ; more test cases below
 |#
 
+; Whether a given string expression representing a measure has metadata.
+(define (has-metadata? string-expr) (metadata? (car string-expr)))
+
+#|
+(has-metadata? '(("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ; -> #t
+(has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
+|#
+
+; TODO -> wrapping of notes happens Here
+; TODO -> also fix with section (lists of measures) and update test cases (start with parse and then work way up)
 ; Properly handles whether there is metadata or not
 (define (process-measure string-expr)
-    (let ((has-metadata? )) (if () () ())))
-(list (car string-expr) (cdr string-expr)))))
-    (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))
+    (let
+        ((metadata (get-metadata string-expr))
+        (notes
+            (if (has-metadata? string-expr)
+            (cdr string-expr)
+            string-expr)))
+    (list metadata notes)))
+
+#|
+(process-measure (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1)))) ; -> (("3" "4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
+|#
 
 ; Parses the expression into our music data types
 ; The main entry point for user input
