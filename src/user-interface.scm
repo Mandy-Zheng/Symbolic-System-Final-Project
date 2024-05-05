@@ -499,7 +499,7 @@
   )
 
 
-=======
+
 ;; given the index of the measure, index of the note, replace with it with the new one
 (define (edit-note! measure-i note-i new-note)
   (let ((measure-body (get-measure-at-index measure-i)))
@@ -520,7 +520,6 @@
     (get-current-voice-piece!))
 
 ;; switching logic
->>>>>>> e25eb20b1dc4530432e9f9b1378d825dc2d84278
 (define (switch-voice! new-voice)
   (let ((new-voice-i (find-index-by-first-element (get-current-piece-body) new-voice)))
     (if new-voice-i
@@ -707,6 +706,7 @@
 (switch-piece! 'twinkle)
 |#
 
+#|
 ;; test with real content
 (start-composing! 'nhung) 
 (define-new-piece! 'twinkle)   
@@ -737,17 +737,15 @@
 	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2")
 	     )))
 
+|#
+
 #|
 (measure? (list (list "4/4" (list "C" "major") "bass")
 		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
 
 (metadata? (list "4/4" (list "C" "major") "bass") )
 |#
-(get-current-piece!)
-(get-current-piece-body)
 
-
-(show-pdf!)
 #|
 
 (define-new-piece! 'twinkle1)
@@ -861,11 +859,7 @@
 		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
 		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
 		     ))
-<<<<<<< HEAD
 
 |#
 
 
-=======
-|#
->>>>>>> e25eb20b1dc4530432e9f9b1378d825dc2d84278
