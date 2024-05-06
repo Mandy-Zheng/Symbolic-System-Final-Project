@@ -1,11 +1,11 @@
 
-(define (print . args)
-  (let lp ((statement args))
-    (if (not (= (length statement) 0))
-	(begin (display (car statement))
-	(display "\n")
-	(lp (cdr statement)))))
-  )
+;; (define (print . args)
+;;   (let lp ((statement args))
+;;     (if (not (= (length statement) 0))
+;; 	(begin (display (car statement))
+;; 	(display "\n")
+;; 	(lp (cdr statement)))))
+;;   )
 
 (define sharp "#")
 (define flat "b")
@@ -153,7 +153,6 @@ A note predicate where it is represented by a pitch and then a duration for teh 
 Return true if the symbol follows this pattern, else false.
 |#
 (define (note? expr)
-  ; (print (>= (length expr)))
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
        (let lp ((expr expr))
 	 (if (= 1 (length expr))
@@ -329,7 +328,6 @@ Return true if at least one measure, else false.
 |#
 
 (define (key-signature? key)
-  (print "key" key (string-upcase (substring (car key) 0 1)))
   (and
    (= 2 (length key))
    (or (string=? "major" (cadr key)) (string=? "minor" (cadr key)))
