@@ -452,6 +452,7 @@
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((parsed-content (parse new-content)) (current-body (get-current-voice-measures)))
+	(print parsed-content)
     (if (or (> insert-i (length current-body))
 	    (<= insert-i 0))
 	(display-message (list
@@ -574,7 +575,7 @@
 ;; into the current voice body at index insert-i
 (define (copy-voice-to-current-voice! piece-name voice-name insert-i)
   (let ((current-body (get-current-voice-measures)))
-    (if (or (> insert-i (length current-body))
+    (if (or (> insert-i (+ (length current-body) 1))
 	    (<= insert-i 0))
 	(display-message (list
 			  "The index is out of range. Please select from 1 to"

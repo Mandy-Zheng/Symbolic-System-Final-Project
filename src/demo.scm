@@ -22,80 +22,77 @@
 (show-all-commands-for-notes!)
 
 ;; actual content
-(define-new-piece! 'twinkle)   
+(define-new-piece! 'twinkle1)   
 
-(define-new-voice! 'one)
+(define-new-voice! 'right)
 
 ;; start by adding measure or section
 
-; a measure
+;; a measure
 (add! '((4 4 (C major) treble) (C4 1) (C4 1) (G4 1) (G4 1)))
 
-; a whole section!
+;; a whole section!
 (add! '((4 4 (C major) treble) (A4 1) (A4 1) (G4 2) || (F4 1) (F4 1) (E4 1) (E4 1) || (D4 1) (D4 1) (C4 2)))
 
-#| TODO update all materials 
-(add! (list (list "4/4" (list "C" "major") "treble")
-	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+;; another section
+(add! '((4 4 (C major) treble) (C4 1) (C4 1) (G4 1) (G4 1) || (A4 1) (A4 1) (G4 2) || (F4 1) (F4 1) (E4 1) (E4 1) || (D4 1) (D4 1) (C4 2)))
 
-(add! (list (list "4/4" (list "C" "major") "treble")
-	    (list "G4" "4") (list "A4" "4") (list "C4" "E4" "2")))
-|#
+;; show the current piece
+(get-current-piece!)
 
-;; second voice
-(define-new-voice! 'two)
+;; so nice!
+(play-music!)
 
-;; 
-(add! (list (list "4/4" (list "C" "major") "bass")
-	    (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "2") ))
+;; oh no! what about up above the world?! we forgot the middle section
+;; TODO -- fix (Amanda and Nhung)
+(insert! 5 '((4 4 (C major) treble) (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D4 2) || (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D#4 2) || (E4 1) (E4 1) (D#4 2)))
 
-(add!  (list (list "4/4" (list "C" "major") "bass")
-	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+;; we have a duplicate measure at the end!
+(delete! 9)
 
-;; oops, we forgot the insert: can insert by measure and section
-(insert! 0  (list (list "1/4" (list "C" "major") "bass")
-		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+;; but, our last note is still wrong...
 
-(insert! 0 (list
-	    (list (list "4/4" (list "C" "major") "bass")
-		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
-	    (list (list "4/4" (list "C" "major") "bass")
-		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))))
+;; let's fix it!
+(edit-note 8 3 '(C4 2))
 
-;; forgot to add more to voice one so we can switch to it
-(switch-voice! 'one) 
+(show-pdf!)
 
-; add section
-(add! (list
-       (list (list "4/4" (list "C" "major") "bass")
-	    (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
-       (list (list "4/4" (list "C" "major") "bass")
-	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2"))))
 
-;; let's see the current voice and piece
-(get-current-voice-piece!)
+
+;; let's create a new piece to make things more interesting
+
+(define-new-piece! 'twinkle2)
+
+;; new voice in new piece
+(define-new-voice! 'left)
+
+;; the entire part
+(add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+(add! '((4 4 (C major) bass) (G3 4) || (G3 4) || (G3 4) || (G3 4)))
+(add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+
+(get-all-pieces-names!)
+(get-current-piece!)
+
+;; now, switch!
+(switch-piece! 'twinkle1)
+(get-current-piece!)
+
+;; merge them!
+(define-new-voice! 'left)
+(copy-voice-to-current-voice! 'twinkle2 'left 1)
 
 (get-current-piece!)
 
 
-;; oops, we added the one measure, let's delete it
-(delete! 0)
-
-;; by section
-(delete! 1 3)
-
-;; instead of deleting, we can also edit
-(edit-measure! 0
-	       ;TODO measure here 
-	       )
-
-(get-current-voice-piece!)
-
-(get-measure! measue-i)
-
-(edit-note! measure-i note-i new-note) 
+;; let's go to D major for the last section
+(transpose-section! 2 9 12)
 
 
-;; Let's see the piece in pdf form
+;; but, the key signature is now wrong...
+(edit-key! 9 12 '(D major))
 
+
+;; our masterpiece!
 (show-pdf!)
+(play-music!)
