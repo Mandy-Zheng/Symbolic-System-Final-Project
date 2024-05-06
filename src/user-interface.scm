@@ -11,7 +11,7 @@
 
 (define current-piece-name)
 (define author-name)
-(define session-environment) ;; list of voices, voice is list of measures
+(define session-environment) 
 (define current-voice-name)
 (define current-voice-index) 
 
@@ -269,14 +269,6 @@
           ((equal? (caar lists) name) index)
           (else (loop (cdr lists) (+ index 1))))))
 
-;; updates the current-voice-index
-(define (update-current-voice-index)
-  (if (null? current-voice-name)
-      #f
-      (begin
-	(let ((body (get-current-piece-body)))
-	  (set! current-voice-index
-		(find-index-by-first-element body current-voice-name))))))
 
 ;; Insert by splitting two portion. Helper for insert!.
 (define (insert-at index element lst)
@@ -418,6 +410,16 @@
 (define (reset-voice-vars)
   (set! current-voice-name '())
   (set! current-voice-index '()))
+
+
+;; updates the current-voice-index
+(define (update-current-voice-index)
+  (if (null? current-voice-name)
+      #f
+      (begin
+	(let ((body (get-current-piece-body)))
+	  (set! current-voice-index
+		(find-index-by-first-element body current-voice-name))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
