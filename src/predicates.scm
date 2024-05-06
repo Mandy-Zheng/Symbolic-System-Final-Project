@@ -217,23 +217,23 @@ Return true if at least two notes and meta, else false.
 
 #|
 (measure? (list
-	   (list "3" "4" (list "F" "major") "bass") ; meta
-	   (list (list "A#4" "Bb3" "2")
-		 (list "G#2" "Bb1" "2")))) ;; #t
+	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))) ; #t
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "3" "4" (list "F" "major") "bass") ; meta
-	   (list (list "A#4" "Bb3" "2")))) ; #f
+	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "A#4" "Bb3" "2"))) ; #f
 
 ;; no meta with 1 note only		
 (measure? (list
-	   (list (list "A#4" "Bb3" "2")))) ; #f
+	   (list "A#4" "Bb3" "2"))) ; #f
 
 
 (measure? (list
-	   (list (list "A#4" "Bb3" "2")
-		(list "A#4" "Bb3" "2")))) ; #f
+	   (list "A#4" "Bb3" "2")
+		(list "A#4" "Bb3" "2"))) ; #f
 
 |#
 
