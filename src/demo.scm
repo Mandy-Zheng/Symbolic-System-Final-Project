@@ -54,7 +54,7 @@
 ;; let's fix it!
 (edit-note! 8 3 '(C4 2))
 
-(show-pdf!)
+;(show-pdf!)
 
 
 ;; let's create a new piece to make things more interesting
@@ -93,7 +93,6 @@
 
 ;; but, the key signature is now wrong...
 (edit-key! 9 12 '(D major))
-
 
 ;; our masterpiece!
 (show-pdf!)

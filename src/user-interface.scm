@@ -333,6 +333,18 @@
 (define (get-range lst start end)
   (list-tail (list-head lst (+ end 1)) start))
 
+;;replace a section of music
+(define (edit-section measure-start measure-end new-measures)
+  (let ((current-body (get-current-voice-measures))
+	(max-edit-length (- measure-end measure-start) ))
+    (let ((front (list-head current-body (- measure-start 1)))
+      (end (list-tail current-body measure-end)))
+      (if (or (<= measure-start 0) (> measure-end (length current-body)))
+	  (error "Invalid Measure Numbers")
+	  )
+      (save-voice (append front new-measures end))
+      )))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Read From Environment ;;;  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -486,15 +498,8 @@
 
 
 (define (edit-section! measure-start measure-end new-measures)
-  (let ((current-body (get-current-voice-measures))
-	(max-edit-length (- measure-end measure-start) ))
-    (let ((front (list-head current-body (- measure-start 1)))
-      (end (list-tail current-body measure-end)))
-      (if (or (<= measure-start 0) (> measure-end (length current-body)))
-	  (error "Invalid Measure Numbers")
-	  )
-      (save-voice (append front (parse new-measures) end))
-      (get-current-voice-piece!))))
+      (edit-section (parse new-measures))
+      (get-current-voice-piece!))
 
 
 ;; parsing numbers as numbers or as strings?
@@ -502,21 +507,27 @@
 	(let ((parsed-clef (symbol->string new-clef)))
 		(if (clef? parsed-clef)
 			(let ((measures (get-current-voice-measures))
-			(editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
+			(editing-measures (get-range (get-current-voice-measures) (- measure-start 1) (- measure-end 1))))
 		(if (and (> measure-start 0) (<= measure-end (length measures)))
-			(edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) (get-key measure) parsed-clef) (cdr measure))) editing-measures))
+			(edit-section measure-start measure-end (map (lambda (measure) (append (list (list (get-time measure) (get-key measure) parsed-clef)) (cdr measure))) editing-measures))
 			(error "Invalid Measure Numbers")))
-      (error "Invalid Clef"))))
+			(error "Invalid Clef"))
+		(get-current-voice-piece!)))
 
 (define (edit-key! measure-start measure-end new-key)
-	(let ((parsed-key (map symbol->string new-key))) ; assumes well-formed
-		(if (key-signature? new-key)
-			(let ((measures (get-current-voice-measures))
-			(editing-measures (list-tail (list-head (get-current-voice-measures) measure-end) measure-start)))
-			(if (and (> measure-start 0) (<= measure-end (length measures)))
-				(edit-section! measure-start measure-end (map (lambda (measure) (append (list (get-time measure) new-key (get-clef measure)) (cdr measure))) editing-measures))
-				(error "Invalid Measure Numbers")))
-      (error "Invalid Clef"))))
+  (let ((parsed-key (map (lambda (item idx)
+			   (if (= idx 0)
+			       (string-upcase (symbol->string item))
+			       (symbol->string item))) new-key (iota 2)))) ; assumes well-formed
+    (if (key-signature? parsed-key)
+	(let (
+	      (measures (get-current-voice-measures))
+	      (editing-measures (get-range (get-current-voice-measures) (- measure-start 1) (- measure-end 1))))
+	  (if (and (> measure-start 0) (<= measure-end (length measures)))
+	      (edit-section measure-start measure-end (map (lambda (measure) (append (list (list (get-time measure) parsed-key (get-clef measure))) (cdr measure))) editing-measures))
+	      (error "Invalid Measure Numbers")))
+	(error "Invalid Key"))
+    (get-current-voice-piece!)))
 
 ;; given the index of the measure, index of the note, replace with it with the new one
 (define (edit-note! measure-i note-i new-note)

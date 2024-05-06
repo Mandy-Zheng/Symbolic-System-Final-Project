@@ -329,6 +329,7 @@ Return true if at least one measure, else false.
 |#
 
 (define (key-signature? key)
+  (print "key" key (string-upcase (substring (car key) 0 1)))
   (and
    (= 2 (length key))
    (or (string=? "major" (cadr key)) (string=? "minor" (cadr key)))
