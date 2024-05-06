@@ -40,8 +40,9 @@
 ;; show the current piece
 (get-current-piece!)
 
+
 ;; so nice!
-(play-music!)
+(show-pdf!)   
 
 ;; oh no! what about up above the world?! we forgot the middle section
 (insert! 5 '((4 4 (C major) treble) (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D4 2) || (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D#4 2) || (E4 4) (E4 4) (D#4 2)))
@@ -52,24 +53,22 @@
 ;; but, our last note is still wrong...
 
 ;; let's fix it!
-(edit-note! 8 3 '(C4 2))
+(edit-note! 8 3 '(D4 2))
 
-;(show-pdf!)
-
+(show-pdf!)
 
 ;; let's create a new piece to make things more interesting
-
 (define-new-piece! 'twinkle2)
 
 ;; new voice in new piece
 (define-new-voice! 'left)
 
 ;; the entire part
-(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 E3 G3 2)))
 
 (add! '((4 4 (C major) bass) (G3 1) || (G3 1) || (G3 1) || (G3 1)))
 
-(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 E3 G3 2)))
 
 (get-all-pieces-names!)
 (get-current-piece!)
@@ -84,8 +83,8 @@
 
 (get-current-piece!)
 
-
 (get-current-voice-piece!)
+
 
 ;; let's go to D major for the last section
 (transpose-section! 2 9 12)
@@ -94,6 +93,8 @@
 ;; but, the key signature is now wrong...
 (edit-key! 9 12 '(D major))
 
+
 ;; our masterpiece!
 (show-pdf!)
-(play-music!)
+
+;(play-music!)
