@@ -170,46 +170,25 @@
 (get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
 |#
 
+(define (os-open-command)
+   (if (eq? microcode-id/operating-system 'unix)
+    "open "
+    "xdg-open ")
+  )
+ 
+
 (load-option 'synchronous-subprocess)
 (define (open-pdf file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
-  (run-shell-command (string-append "open " (string-append file-path ".pdf")))) ;;see if it works on macs
+  (run-shell-command (string-append (os-open-command) (string-append file-path ".pdf")))) 
+
 
 (define (play-music file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
-  (run-shell-command (string-append "open " (string-append file-path ".midi")))) ;;see if it works on macs
+  (run-shell-command (string-append (os-open-command) (string-append file-path ".midi")))) 
 
 ;;output 
-(play-music "output")
 
-  
-#|
+;;(open-pdf "output")
 
-  
-  "cf = \relative {
-  \clef bass
-  \global
-  c4 c' b a |
-  g a f d |
-  e f g g, |
-  c1
-}"
-  )
-;;relative pitches to specified one
-
-;; \relative c' {
-;;  c4 d e f | g2 g4 | a8 a g4 f2 | e1 | r2 r4 r8 r16 r32 r64 |
-;; }
-;;times with duration
-
-;;c is middle c
-;; c, is lower by one octave
-;; c' is higher by one octave
-
-
-;;\relative c' {
-;;  \key g \major % Change to the key of G major
-;;  c4 d e f | g2 g4 | a8 a g4 f2 | e1 | r2 r4 r8 r16 r32 r64 |
-;;}
-|#
-
+;;(play-music "output")
