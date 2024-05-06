@@ -1,11 +1,6 @@
-
-					; Generic add procedures
 (load "predicates.scm")
 (load "parser.scm")
-;; (define (default-convert expr)
-;;   (error "Unknown expression type" expression))
 
-;;NOTE: TO USE CONVERT ON A PIECE OF MUSIC, USE CONVERT-PIECE OR CONVERT-SECTION
 (define (convert-metadata measure)
   (string-append
    (convert-time (get-time measure))
@@ -39,7 +34,9 @@
   )
 
 (define (convert-pitch pitch)
-  (string-append (string-downcase (get-letter pitch)) (convert-accidental (get-accidentals pitch)) (convert-octave (string->number (get-octave pitch))))
+  (string-append (string-downcase (get-letter pitch))
+		 (convert-accidental (get-accidentals pitch))
+		 (convert-octave (string->number (get-octave pitch))))
   )
 
 (define (convert-note note)
@@ -76,7 +73,10 @@
 (define (convert-time time)
   (string-append "\\time " time " "))
 (define (convert-key key)
-  (string-append "\\key " (string-downcase (car key)) " \\" (string-downcase (cadr key)) " "))
+  (string-append "\\key "
+		 (string-downcase (car key))
+		 " \\"
+		 (string-downcase (cadr key)) " "))
 (define (convert-clef clef)
   (string-append "\\clef " clef " "))
 
@@ -123,8 +123,13 @@
 	  (key (get-key measure))
 	  (clef (get-clef measure)))
       (if (= 0 (length (cdr sections)))
-	  (string-append converted (convert-metadata-if-different past-time past-key past-clef time key clef) (convert-measure measure))
-	  (lp (cdr sections) (cadr sections) (string-append converted (convert-metadata-if-different past-time past-key past-clef time key clef) (convert-measure measure)) time key clef)
+	  (string-append converted
+			 (convert-metadata-if-different past-time past-key past-clef time key clef)
+			 (convert-measure measure))
+	  (lp (cdr sections) (cadr sections)
+	      (string-append converted
+			     (convert-metadata-if-different past-time past-key past-clef time key clef)
+			     (convert-measure measure)) time key clef)
       
       )
       )
@@ -193,4 +198,3 @@
 ;;(open-pdf "output")
 
 ;;(play-music "output")
-(run-shell-command (string-append "lilypond output.ly"))
