@@ -28,6 +28,17 @@
 
 ;; start by adding measure or section
 
+; TODO: eventually remove parse
+
+(define (parse1 in) (parse in))
+;(define (parse1 in) in)
+
+; a measure
+(add! (parse1 '((4 4 (C major) treble) (C4 1) (C4 1) (G4 1) (G4 1))))
+
+; a whole section!
+(add! (parse1 '((4 4 (C major) treble) (A4 1) (A4 1) (G4 2) || (F4 1) (F4 1) (E4 1) (E4 1) || (D4 1) (D4 1) (C4 2))))
+
 #| TODO update all materials 
 (add! (list (list "4/4" (list "C" "major") "treble")
 	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))

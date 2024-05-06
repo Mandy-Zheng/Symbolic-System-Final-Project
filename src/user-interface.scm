@@ -364,6 +364,11 @@
   (let ((voice-body (get-current-voice-measures)))
     (list-ref voice-body i)))
 
+;; Return the last measure of the current-voice
+(define (get-last-measure)
+  (let ((voice-body (get-current-voice-measures)))
+    (list-ref voice-body (- (length (voice-body)) 1))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modify Environment ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
