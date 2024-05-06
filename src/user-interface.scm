@@ -11,7 +11,7 @@
 
 (define current-piece-name)
 (define author-name)
-(define session-environment) ;; list of voices, voice is list of measures
+(define session-environment) 
 (define current-voice-name)
 (define current-voice-index) 
 
@@ -174,15 +174,6 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Helper Functions to Modidy Global vars ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; reset  current-voice-name and index because piece was changed
-(define (reset-voice-vars)
-  (set! current-voice-name '())
-  (set! current-voice-index '()))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Getter/Commands for users: display stuffs for users ;;;
@@ -269,14 +260,6 @@
           ((equal? (caar lists) name) index)
           (else (loop (cdr lists) (+ index 1))))))
 
-;; updates the current-voice-index
-(define (update-current-voice-index)
-  (if (null? current-voice-name)
-      #f
-      (begin
-	(let ((body (get-current-piece-body)))
-	  (set! current-voice-index
-		(find-index-by-first-element body current-voice-name))))))
 
 ;; Insert by splitting two portion. Helper for insert!.
 (define (insert-at index element lst)
@@ -420,6 +403,16 @@
   (set! current-voice-index '()))
 
 
+;; updates the current-voice-index
+(define (update-current-voice-index)
+  (if (null? current-voice-name)
+      #f
+      (begin
+	(let ((body (get-current-piece-body)))
+	  (set! current-voice-index
+		(find-index-by-first-element body current-voice-name))))))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Commands to compose ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -436,8 +429,7 @@
   (let ((piece-body (get-current-piece-body)))
     (save-body (append! piece-body (list (list voice-name (list  ))))))
   (update-current-voice-index)
-  (display-message (list "You're now starting voice" voice-name
-			 "at index:" current-voice-index))
+  (display-message (list "You're now starting voice" voice-name))
   (get-current-piece!))
 
 ;; delete the whole voice by name
