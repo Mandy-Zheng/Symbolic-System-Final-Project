@@ -251,32 +251,28 @@ Return true if at least one measure, else false.
 #|
 
 (section? (list (list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #t
+					(list "4/4" (list "F" "major") "bass") ; meta
+					(list "G3" "Bb3" "2")
+					(list "C4" "E4" "2")))) ; -> #t
 
 (section? (list (list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2")))
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2"))
 				(list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #t
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2")))) ; -> #t
 
 ; malformed measure
 (section? (list (list
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #f
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2")))) ; -> #f
 
 ; malformed measure
 (section? (list (list
-					(list "test" 1) ; meta
-					(list (list "G#2" "Bb1" "2"))))) ; -> #f
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "G#2" "Bb1" "2")))) ; -> #f
 
 
 |#
