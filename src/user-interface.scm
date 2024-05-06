@@ -174,15 +174,6 @@
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Helper Functions to Modidy Global vars ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; reset  current-voice-name and index because piece was changed
-(define (reset-voice-vars)
-  (set! current-voice-name '())
-  (set! current-voice-index '()))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Getter/Commands for users: display stuffs for users ;;;
