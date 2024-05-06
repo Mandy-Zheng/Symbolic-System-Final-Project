@@ -41,7 +41,7 @@
 	  )
       (if (or (< new-octave 0) (> new-octave 8))
 	  (error "Transposing out of bounds"))
-      (if (and (< steps 0) (> (string-length (car (list-ref chromatics new-letter-idx))) 1)) ;; if its an accidental, and we are going down, we use the second option with flats
+      (if (and (< steps 0) (> (string-length (car (list-ref chromatics new-letter-idx))) 1))     ;; if its an accidental, and we are going down, we use the second option with flats
 	  (string-append (cadr (list-ref chromatics new-letter-idx)) (number->string new-octave))
 	  (string-append (car (list-ref chromatics new-letter-idx)) (number->string new-octave)))
 	
