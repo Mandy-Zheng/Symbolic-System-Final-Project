@@ -1,5 +1,6 @@
 ;;(load "~/Symbolic-System-Final-Project/src/parser.scm")
-(load "~/Symbolic-System-Final-Project/src/predicates.scm")
+;(load "~/Symbolic-System-Final-Project/src/predicates.scm")
+(load "predicates.scm")
 (define chromatic-scale
   (list
     (list "A" "G##" "Bbb")

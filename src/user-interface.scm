@@ -452,7 +452,6 @@
 
 (define (insert! insert-i new-content) ; for section and measure
   (let ((parsed-content (parse new-content)) (current-body (get-current-voice-measures)))
-	(print parsed-content)
     (if (or (> insert-i (length current-body))
 	    (<= insert-i 0))
 	(display-message (list

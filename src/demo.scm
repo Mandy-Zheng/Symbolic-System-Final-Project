@@ -44,7 +44,6 @@
 (play-music!)
 
 ;; oh no! what about up above the world?! we forgot the middle section
-;; TODO -- fix (Amanda and Nhung)
 (insert! 5 '((4 4 (C major) treble) (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D4 2) || (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D#4 2) || (E4 1) (E4 1) (D#4 2)))
 
 ;; we have a duplicate measure at the end!
@@ -53,10 +52,9 @@
 ;; but, our last note is still wrong...
 
 ;; let's fix it!
-(edit-note 8 3 '(C4 2))
+(edit-note! 8 3 '(C4 2))
 
 (show-pdf!)
-
 
 
 ;; let's create a new piece to make things more interesting
@@ -68,7 +66,9 @@
 
 ;; the entire part
 (add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+
 (add! '((4 4 (C major) bass) (G3 4) || (G3 4) || (G3 4) || (G3 4)))
+
 (add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
 
 (get-all-pieces-names!)
@@ -84,6 +84,8 @@
 
 (get-current-piece!)
 
+
+(get-current-voice-piece!)
 
 ;; let's go to D major for the last section
 (transpose-section! 2 9 12)
