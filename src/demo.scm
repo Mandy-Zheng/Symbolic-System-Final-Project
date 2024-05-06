@@ -94,6 +94,11 @@
 (edit-key! 9 12 '(D major))
 
 
+;;let's update it to D major for the right hand as well
+(switch-voice! 'right)
+(transpose-section! 2 9 12)
+(edit-key! 9 12 '(D major))
+
 ;; our masterpiece!
 (show-pdf!)
 

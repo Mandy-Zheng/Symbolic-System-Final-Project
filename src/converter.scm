@@ -154,13 +154,14 @@
 			       (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )))))
 |#
 
-(define (convert-piece . piece)
+(define (convert-piece name piece)
   (call-with-output-file "output.ly"
     (lambda (output-port)
       (display "\\version \"2.22.0\"\n" output-port)
+      (display (string-append "\\header {title=\"" name "\"}\n") output-port)
       (display "\\score {\n << \n" output-port)
       (display (apply string-append (map convert-voice piece)) output-port)
-      (display ">> \n \\layout {} \n \\midi {} \n}\n" output-port))))
+      (display ">> \n \\layout {indent=0} \n \\midi {} \n}\n" output-port))))
 #|
 (display (convert-piece (list (list "voice1") (list (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
 			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2"))))
@@ -192,3 +193,4 @@
 ;;(open-pdf "output")
 
 ;;(play-music "output")
+(run-shell-command (string-append "lilypond output.ly"))

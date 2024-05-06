@@ -628,9 +628,9 @@
 
 ;;; Show pdf of the current piece, use converter from lilypond
 (define (show-pdf!)
-  (apply convert-piece (get-current-piece-body))
+  (convert-piece (symbol->string current-piece-name) (get-current-piece-body))
   (open-pdf "output"))
 
 (define (play-music!)
-  (apply convert-piece (get-current-piece-body))
+  (convert-piece (symbol->string current-piece-name) (get-current-piece-body))
   (play-music "output"))

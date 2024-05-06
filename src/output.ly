@@ -1,4 +1,5 @@
 \version "2.22.0"
+\header {title="twinkle1"}
 \score {
  << 
 \new Staff { 
@@ -12,10 +13,11 @@ g'4 g'4 f'4 f'4 |
 e'4 e'4 d'2 | 
 g'4 g'4 f'4 f'4 | 
 e'4 e'4 d'2 | 
-c'4 c'4 g'4 g'4 | 
-a'4 a'4 g'2 | 
-f'4 f'4 e'4 e'4 | 
-d'4 d'4 c'2 | 
+\bar "||" \key d \major 
+d'4 d'4 a'4 a'4 | 
+b'4 b'4 a'2 | 
+g'4 g'4 fis'4 fis'4 | 
+e'4 e'4 d'2 | 
 } 
  } 
 \new Staff { 
@@ -37,6 +39,6 @@ g1 |
 } 
  } 
 >> 
- \layout {} 
+ \layout {indent=0} 
  \midi {} 
 }
