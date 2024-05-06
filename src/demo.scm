@@ -29,13 +29,13 @@
 ;; start by adding measure or section
 
 ;; a measure
-(add! '((4 4 (C major) treble) (C4 1) (C4 1) (G4 1) (G4 1)))
+(add! '((4 4 (C major) treble) (C4 4) (C4 4) (G4 4) (G4 4)))
 
 ;; a whole section!
-(add! '((4 4 (C major) treble) (A4 1) (A4 1) (G4 2) || (F4 1) (F4 1) (E4 1) (E4 1) || (D4 1) (D4 1) (C4 2)))
+(add! '((4 4 (C major) treble) (A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
 
 ;; another section
-(add! '((4 4 (C major) treble) (C4 1) (C4 1) (G4 1) (G4 1) || (A4 1) (A4 1) (G4 2) || (F4 1) (F4 1) (E4 1) (E4 1) || (D4 1) (D4 1) (C4 2)))
+(add! '((4 4 (C major) treble) (C4 4) (C4 4) (G4 4) (G4 4) || (A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
 
 ;; show the current piece
 (get-current-piece!)
@@ -44,7 +44,7 @@
 (play-music!)
 
 ;; oh no! what about up above the world?! we forgot the middle section
-(insert! 5 '((4 4 (C major) treble) (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D4 2) || (G4 1) (G4 1) (F4 1) (F4 1) || (E4 1) (E4 1) (D#4 2) || (E4 1) (E4 1) (D#4 2)))
+(insert! 5 '((4 4 (C major) treble) (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D4 2) || (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D#4 2) || (E4 4) (E4 4) (D#4 2)))
 
 ;; we have a duplicate measure at the end!
 (delete! 9)
@@ -65,11 +65,11 @@
 (define-new-voice! 'left)
 
 ;; the entire part
-(add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
 
-(add! '((4 4 (C major) bass) (G3 4) || (G3 4) || (G3 4) || (G3 4)))
+(add! '((4 4 (C major) bass) (G3 1) || (G3 1) || (G3 1) || (G3 1)))
 
-(add! '((4 4 (C major) bass) (C3 E3 G3 4) || (F3 A3 2) (C3 E3 G3 4) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
+(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 G3 2)))
 
 (get-all-pieces-names!)
 (get-current-piece!)
