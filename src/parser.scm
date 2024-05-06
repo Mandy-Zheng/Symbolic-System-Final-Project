@@ -145,11 +145,11 @@
 ; string-expr is a list of lists of measures, where each list's measure all have the same metadata
 ; Case 1 - M1 notes | notes | ...
 ; Case 2 – M1 notes | notes | M2 notes | notes
-; Case 3 – notes | notes | ... [TODO] (look at metadata from last measure)
+; Case 3 – notes | notes | ...
 (define (propagate-metadata string-expr)
     (map (lambda (measure-list)
         (let ((metadata (get-metadata (first measure-list))))
-            (cons (first measure-list)
+            (cons (if (has-metadata? (first measure-list)) (first measure-list) (cons metadata (first measure-list)))
                 (map (lambda (measure) (cons metadata measure)) (cdr measure-list)))))
     string-expr)) ; assume first measure in each list has metadata
 
@@ -189,7 +189,7 @@
 (define (has-metadata? string-expr) (metadata? (car string-expr)))
 
 #|
-(has-metadata? '(("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ; -> #t
+(has-metadata? '(("3/4" ("F" "major") "bass") ("G#2" "2") ("A2" "1"))) ; -> #t
 (has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
