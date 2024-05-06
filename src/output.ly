@@ -2,21 +2,15 @@
 \score {
  << 
 \new Staff { 
- \relative c' {
-\time 4/4 \key c \major \clef bass 
-b4 d4 <f a >2 | 
-b4 d4 <f a >2 | 
-\bar "||" \clef treble 
-c1 c1 g1 g1 | 
-} 
- } 
-\new Staff { 
- \relative c' {
-\time 4/4 \key c \major \clef bass 
-a,4 gis4 <c e >2 | 
-b4 d4 <f a >2 | 
+  {
+\time 4/4 \key c \major \clef treble 
+c'1 c'1 g'1 g'1 | 
+a'1 a'1 g'2 | 
+f'1 f'1 e'1 e'1 | 
+d'1 d'1 c'2 | 
 } 
  } 
 >> 
  \layout {} 
+ \midi {} 
 }
