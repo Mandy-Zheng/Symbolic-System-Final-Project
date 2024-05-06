@@ -16,15 +16,15 @@
   )
 
 (define (convert-octave octave)
-  (cond ((= 0 octave)  ",,,,")
-	((= 1 octave) ",,,")
-	((= 2 octave) ",,")
-	((= 3 octave) ",")
-	((= 4 octave) "")
-	((= 5 octave) "'")
-	((= 6 octave)  "''")
-	((= 7 octave)  "'''")
-	((= 8 octave)  "''''")
+  (cond ((= 0 octave)  ",,,")
+	((= 1 octave) ",,")
+	((= 2 octave) ",")
+	((= 3 octave) "")
+	((= 4 octave) "'")
+	((= 5 octave) "''")
+	((= 6 octave)  "'''")
+	((= 7 octave)  "''''")
+	((= 8 octave)  "'''''")
 	(else (error "Invalid octave")))
 
   )
@@ -144,7 +144,7 @@
 ;;   (match-args section?)
 ;;   convert-section)
 (define (convert-voice voice)
-  (string-append "\\new Staff { \n \\relative c' {\n" (apply convert-section (cadr voice)) "} \n } \n")
+  (string-append "\\new Staff { \n  {\n" (apply convert-section (cadr voice)) "} \n } \n")
   )
 
 #|
@@ -189,6 +189,7 @@
 
 ;;output 
 
-(open-pdf "output")
+;;(open-pdf "output")
 
 ;;(play-music "output")
+(run-shell-command (string-append "lilypond output.ly"))

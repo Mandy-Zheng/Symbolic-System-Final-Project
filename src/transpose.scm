@@ -3,9 +3,6 @@
 (load "predicates.scm")
 (define chromatic-scale
   (list
-    (list "A" "G##" "Bbb")
-   (list "A#" "Bb" "Cbb")
-   (list "B" "Cb" "A##")
    (list "C" "B#" "Dbb")
    (list "C#" "Db" "B##")
    (list "D" "C##" "Ebb")
@@ -15,6 +12,9 @@
    (list "F#" "Gb" "E##")
    (list "G" "F##" "Abb")
    (list "G#" "Ab")
+   (list "A" "G##" "Bbb")
+   (list "A#" "Bb" "Cbb")
+   (list "B" "Cb" "A##")
    ))
 
 (define (get-chromatic-index letter)
@@ -25,10 +25,11 @@
 	  )
       )
   )
-
-(get-chromatic-index "A") ; 0
-(get-chromatic-index "D##") ; 7
-(get-chromatic-index "Gb") ; 9
+#|
+(get-chromatic-index "A") ; 9
+(get-chromatic-index "D##") ; 4
+(get-chromatic-index "Gb") ; 6
+|#
 
 (define (transpose-pitch steps pitch)
   (let (
@@ -49,12 +50,14 @@
   )
 
 
-
+#|
 (transpose-pitch 12 "E3") ;;"E4"
 (transpose-pitch 12 "E#4") ;"F5"
 (transpose-pitch 3 "A##4") ;"D4"
 (transpose-pitch -3 "A##4") ; "Ab4"
 (transpose-pitch 2 "F##4") ; "A5"
+(transpose-pitch 2 "G3") ; "A3"
+|#
 
 (define (transpose-note steps note)
   (map (lambda (pitch)
@@ -65,6 +68,7 @@
 	 ) note)
   )
 
+
 (define (transpose-measure steps measure)
   (append (list (get-metadata measure)) (map (lambda (note) (transpose-note steps note)) (get-notes-in-measure measure)))
   )
@@ -73,4 +77,10 @@
   (map (lambda (measure) (transpose-measure steps measure)) sections)
   )
 
+#|
 (transpose-section 3 (list (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")) (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")))) ;;((("3/4" ("E" "minor") "treble") ("A2" "2") ("C2" "1")))
+
+(transpose-section 2 (list (list (list "4/4" (list "C" "major") "bass") (list "C3" "E3" "G3" "1"))))
+					;((("4/4" ("C" "major") "bass") ("D3" "F#3" "A3" "1")))
+
+|#
