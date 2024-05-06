@@ -436,8 +436,7 @@
   (let ((piece-body (get-current-piece-body)))
     (save-body (append! piece-body (list (list voice-name (list  ))))))
   (update-current-voice-index)
-  (display-message (list "You're now starting voice" voice-name
-			 "at index:" current-voice-index))
+  (display-message (list "You're now starting voice" voice-name))
   (get-current-piece!))
 
 ;; delete the whole voice by name

@@ -21,6 +21,8 @@
 
 (show-all-commands-for-notes!)
 
+(note-example!)
+
 ;; actual content
 (define-new-piece! 'twinkle1)   
 
@@ -39,7 +41,6 @@
 
 ;; show the current piece
 (get-current-piece!)
-
 
 ;; so nice!
 (show-pdf!)   
@@ -102,4 +103,4 @@
 ;; our masterpiece!
 (show-pdf!)
 
-;(play-music!)
+(play-music!)
