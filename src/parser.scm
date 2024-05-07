@@ -51,7 +51,6 @@
 (stringify-terms '(a#2 (b3 c1 (d4 2 3 (f3 4))))) ; -> ("A#2" ("B3" "C1" ("D4" "2" "3" ("F3" "4"))))
 |#
 
-
 ; Separate a list into sublists by "||"
 ; Elements can themselves be lists or strings
 (define (separate-by-measure string-expr)
@@ -137,7 +136,6 @@
         '(((("3" "4" ("F" "major") "bass") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1"))) ((("3" "4" ("C" "major") "bass") ("G#2" "2") ("A2" "1"))))) ; -> #t
 |#
 
-
 ; Assign each measure with its proper metadata (tested below)
 ; string-expr is a list of lists of measures, where each list's measure all have the same metadata
 ; Case 1 - M1 notes | notes | ...
@@ -161,7 +159,7 @@
 ; -> #t
 |#
 
-; metadata-splits is a list of lists of measures
+; Flattens a section of measures by removing the outermost list.
 (define (flatten-section lst)
     (map
         (lambda (sublist)
@@ -182,7 +180,7 @@
             (separate-by-metadata
                 (separate-by-measure string-expr)))))
 
-; Whether a given string expression representing a measure has metadata.
+; Returns whether a given string expression representing a measure has metadata.
 (define (has-metadata? string-expr) (metadata? (car string-expr)))
 
 #|
@@ -190,7 +188,7 @@
 (has-metadata? '(("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
-; Properly handles whether there is metadata or not
+; Properly handles whether there is metadata or not.
 (define (process-measure string-expr)
     (let
         ((metadata (get-metadata string-expr))
@@ -200,8 +198,8 @@
             string-expr)))
     (cons metadata notes)))
 
-; Combines "3" "4" in the metadata to "3/4"
-; Assumes well-formed input
+; Combines, for instance, "3" "4" in the metadata to "3/4".
+; Assumes well-formed input.
 (define (combine-time string-expr)
     (map (lambda (elem) (if
         (and (list? elem) (> (length elem) 2) (number? (string->number (first elem))) (number? (string->number (second elem)))) ; has a time signature
@@ -213,8 +211,8 @@
 (process-measure (combine-time (stringify-terms '((3 4 (F major) bass) (G#2 2) (A2 1))))) ; -> (("3/4" ("F" "major") "bass") (("G#2" "2") ("A2" "1")))
 |#
 
-; Parses the expression into our music data types
-; The main entry point for user input
+; Parses the expression into our music data types.
+; The main entry point for user input.
 (define (parse expr)
     (let ((string-expr (combine-time (stringify-terms expr))))
         (cond
@@ -226,6 +224,8 @@
                 (process-section string-expr)) ; section (contains at least one "||")
             (else (process-measure string-expr))))) ; measure
 
+; By using the predicates (which enforce the internal representations), we can check the
+; end-to-end correctness of our parser!
 #|
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1))))  ; -> #t
 (measure? (parse '((3 4 (F major) bass) (G#2 2) (A2 1) (B2 1)))) ; -> #t
