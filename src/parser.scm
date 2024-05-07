@@ -17,12 +17,11 @@
 (contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
 |#
 
-
 ; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
 ; by making them uppercase.
 (define (fix-case string-unit)
     (if
-        (or (pitch? (string-upcase string-unit)) (pitch? (string-append (string-upcase string-unit) "4"))) ; TODO: hacky fix
+        (or (pitch? (string-upcase string-unit)) (pitch? (string-append (string-upcase string-unit) "4")))
         (string-upcase string-unit)
         string-unit))
 
@@ -76,7 +75,6 @@
                 current)))))
   (helper string-expr '() '()))
 
-; TODO: fix these test cases with actual metadata
 #|
 (separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1"))) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
 (separate-by-measure '(("test" "1") ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1") "||")) ; -> '((("test" "1") ("G#2" "2") ("A2" "1")) (("G#2" "2") ("A2" "1")))
@@ -88,10 +86,9 @@
 ; Separate by measures with metadata -- this collects
 ; all measures will the same metadata in one list.
 
-; TODO (this edge case below)
 ; If there is no metadata in the entire expression, then
 ; return a single list with the metadata from the last measure
-; of the current piece prepended to it. (TODO: this is fake metadata for now)
+; of the current piece prepended to it.
 (define (separate-by-metadata string-expr)
   (define (helper lst acc current)
     ; lst is a list of measures, each with or without metadata (invariant)

@@ -362,8 +362,6 @@ Return true if at least one measure, else false.
   (caddr (car measure)))
 
 
-; TODO: clean up the CFL syntax below
-
 #|
 A metadata predicate where it returns true if the input is a valid symbol following the CFL:
 metadata ::= time-signature key-signature clef 
