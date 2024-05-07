@@ -23,13 +23,14 @@
 
 (note-example!)
 
+(measure-example!)
+
 ;; actual content
 (define-new-piece! 'twinkle1)   
 
 (define-new-voice! 'right)
 
 ;; start by adding measure or section
-
 ;; a measure
 (add! '((4 4 (C major) treble) (C4 4) (C4 4) (G4 4) (G4 4)))
 
@@ -92,7 +93,6 @@
 
 ;; let's go to D major for the last section
 (transpose-section! 2 9 12)
-
 
 ;; but, the key signature is now wrong...
 (edit-key! 9 12 '(D major))
