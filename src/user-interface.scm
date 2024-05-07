@@ -636,7 +636,8 @@
 #|
 SEE demo.scm for a more comprehensive usage of the UI.
 
-Below are test cases without the integration of the parser.
+Below are test cases before the integration of the parser. Hence, they will not work anymore,
+they are to show that the UI works as expected, isolated from the parser. 
 |#
 
 #|
