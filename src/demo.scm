@@ -74,6 +74,9 @@
 (get-all-pieces-names!)
 (get-current-piece!)
 
+;; let's see the new piece
+(show-pdf!)
+
 ;; now, switch!
 (switch-piece! 'twinkle1)
 (get-current-piece!)
