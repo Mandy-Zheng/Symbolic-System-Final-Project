@@ -107,3 +107,17 @@
 (show-pdf!)
 
 (play-music!)
+
+
+;; we can also include rests and dots now!
+
+(define-new-piece! 'rests-and-dots)   
+
+(define-new-voice! 'first)
+
+(add! '((3 4 (D major) treble) (D4 4) (R 2)))
+(add! '((A4 4.)))
+
+(get-current-piece!)
+
+(show-pdf!)
