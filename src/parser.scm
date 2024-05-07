@@ -9,12 +9,12 @@
       (contains-bar (cdr expr)))))
 
 #|
-(contains-bar '("||")) ; #t
-(contains-bar '()) ; #f
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1"))) ; #t
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1") "||")) ; #t
-(contains-bar '("G#2" "2")) ; #f
-(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; #f
+(contains-bar '("||")) ; -> #t
+(contains-bar '()) ; -> #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1"))) ; -> #t
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1") "||" ("G#2" "2") ("A2" "1") "||")) ; -> #t
+(contains-bar '("G#2" "2")) ; -> #f
+(contains-bar '(("test" 1) ("G#2" "2") ("A2" "1"))) ; -> #f
 |#
 
 ; Since Scheme symbols are automatically converted to lowercase, we need to fix the case for pitches
