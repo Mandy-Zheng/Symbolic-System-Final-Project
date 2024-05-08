@@ -119,9 +119,7 @@
 
     ))
 
-#|
-(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
-|#
+;;(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
 
 (define (convert-section . sections)
   (let lp ((sections sections)
@@ -147,10 +145,19 @@
       )
     )
   )
-#|
 ;;(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
-|#
 
+;; (define-generic-procedure-handler convert
+;;   (match-args note?)
+;;   convert-note)
+
+;; (define-generic-procedure-handler convert
+;;   (match-args measure?)
+;;   convert-measure)
+
+;; (define-generic-procedure-handler convert
+;;   (match-args section?)
+;;   convert-section)
 (define (convert-voice voice)
   (string-append "\\new Staff { \n  {\n" (apply convert-section (cadr voice)) "} \n } \n")
   )
@@ -171,14 +178,15 @@
       (display (apply string-append (map convert-voice piece)) output-port)
       (display ">> \n \\layout {indent=0} \n \\midi {} \n}\n" output-port))))
 
-#|
-(display (convert-piece "name" (list (list (list "voice1") (list (list (list "4/4" (list "C" "major") "treble") (list "R" "4") (list "C4" "4") (list "R" "2"))
-			      (list (list "4/4" (list "C" "major") "treble")  (list "R" "4") (list "C4" "E4" "G4" "2."))))
-			(list (list "voice2") (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
-			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2")))))))
+(display (convert-piece (list (list "voice1") (list
+					       (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "R" "4") (list "E4" "4") (list "F4" "4"))
+					       (list (list "4/4" (list "C" "major") "treble") (list "R" "4") (list "C4" "E4" "G4" "2."))))
+			(list (list "voice2") (list
+					       (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2"))))))
 
 (get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
-|#
+
 
 (define (os-open-command)
    (if (eq? microcode-id/operating-system 'unix)
@@ -198,8 +206,7 @@
   (run-shell-command (string-append (os-open-command) (string-append file-path ".midi")))) 
 
 ;;output 
-#|
-(open-pdf "output")
 
-(play-music "output")
-|#
+;;(open-pdf "output")
+
+;;(play-music "output")

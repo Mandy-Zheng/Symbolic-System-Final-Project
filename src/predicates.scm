@@ -1,4 +1,3 @@
-
 ;; (define (print . args)
 ;;   (let lp ((statement args))
 ;;     (if (not (= (length statement) 0))
@@ -49,6 +48,14 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
 |#
 (define (letter? expr)
   (member expr (list "A" "B" "C" "D" "E" "F" "G"))
+  )
+
+(define (rest? expr)
+  (string=? expr "R")
+  )
+
+(define (dot? expr)
+  (string=? expr ".")
   )
 
 #|
@@ -105,7 +112,7 @@ octave ::= [0-9]+
 |#
 (define (pitch? str)
   (let ((len (string-length str)))
-    (cond ((< len 2) #f)
+    (cond ((< len 2) (rest? str))
 	  ((= len 2) (and (letter? (substring str 0 1)) (string->number (substring str 1 2))))
 	  (else
 	   (let ((letter (substring str 0 1))
@@ -124,6 +131,7 @@ octave ::= [0-9]+
 	     )
 	   )
 	  )))
+
 #|
 (pitch? "A#3") ;#t
 (pitch? "#3") ;#f
@@ -133,10 +141,17 @@ octave ::= [0-9]+
 (pitch? "Cbb3") ;#t
 (pitch? "F##17") ;#t
 (pitch? "2") ;#f
+(pitch? "R") ;#t
 |#
 
+
 (define (frequency? expr)
-  (and (string->number expr) (>= (string->number expr) 0))
+  (let ((base-duration (string->number (substring expr 0 1)))
+	(len (string-length expr)))
+    (cond ((= len 1) (and base-duration (>= base-duration 0)))
+	  ((= len 2) (and base-duration (>= base-duration 0) (dot? (substring expr 1))))
+	  (else #f))
+    )
   )
 
 #|
@@ -146,20 +161,28 @@ octave ::= [0-9]+
 (frequency? "a1") ;#f
 (frequency? "-4") ;#f
 (frequency? "0") ;#t
+(frequency? "2.") ;#t
+(frequency? "1..") ;#f
+(frequency? ".8") ;#f
 |#
+
 
 #|
 A note predicate where it is represented by a pitch and then a duration for teh note.
 Return true if the symbol follows this pattern, else false.
 |#
 (define (note? expr)
+
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
-       (let lp ((expr expr))
-	 (if (= 1 (length expr))
-	     (frequency? (car expr)) ;; last item is note duration
-	     (and (pitch? (car expr)) (lp (cdr expr))) ;; check every item before frequency is a valid pitch
+       (if (and (rest? (car expr)) (frequency? (cadr expr))) ;handle rest notes
+	   #t
+	   (let lp ((expr expr))
+	     (if (= 1 (length expr))
+		 (frequency? (car expr)) ;; last item is note duration
+		 (and (not (rest? (car expr))) (pitch? (car expr)) (lp (cdr expr))) ;; check every item before frequency is a valid pitch
+		 )
 	     )
-	 )
+	   )
        )
   )
 
@@ -170,8 +193,9 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "Cb3" "G##2")) ;#f
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
+(note? (list "R" "2")) ;#t
+(note? (list "R" "A#2" "2")) ;#f
 |#
-
 
 #|
 A bar predicate.

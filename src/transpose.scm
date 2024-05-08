@@ -32,21 +32,24 @@
 |#
 
 (define (transpose-pitch steps pitch)
-  (let (
-	(chromatics chromatic-scale)
-	(idx (get-chromatic-index (string-append (get-letter pitch) (get-accidentals pitch))))
-	)
-    (let ((new-letter-idx (modulo (+ idx steps) 12))
-	  (new-octave (+ (string->number (get-octave pitch)) (quotient (+ idx steps) 12)))
+  (if (rest? pitch)
+      pitch
+      (let (
+	    (chromatics chromatic-scale)
+	    (idx (get-chromatic-index (string-append (get-letter pitch) (get-accidentals pitch))))
+	    )
+	(let ((new-letter-idx (modulo (+ idx steps) 12))
+	      (new-octave (+ (string->number (get-octave pitch)) (quotient (+ idx steps) 12)))
+	      )
+	  (if (or (< new-octave 0) (> new-octave 8))
+	      (error "Transposing out of bounds"))
+	  
+	  (if (and (< steps 0) (> (string-length (car (list-ref chromatics new-letter-idx))) 1))     ;; if its an accidental, and we are going down, we use the second option with flats
+	      (string-append (cadr (list-ref chromatics new-letter-idx)) (number->string new-octave))
+	      (string-append (car (list-ref chromatics new-letter-idx)) (number->string new-octave)))
 	  )
-      (if (or (< new-octave 0) (> new-octave 8))
-	  (error "Transposing out of bounds"))
-      (if (and (< steps 0) (> (string-length (car (list-ref chromatics new-letter-idx))) 1))     ;; if its an accidental, and we are going down, we use the second option with flats
-	  (string-append (cadr (list-ref chromatics new-letter-idx)) (number->string new-octave))
-	  (string-append (car (list-ref chromatics new-letter-idx)) (number->string new-octave)))
-	
 	)
-    )
+      )
   )
 
 
@@ -57,7 +60,9 @@
 (transpose-pitch -3 "A##4") ; "Ab4"
 (transpose-pitch 2 "F##4") ; "A5"
 (transpose-pitch 2 "G3") ; "A3"
+(transpose-pitch 2 "R") ; "R"
 |#
+
 
 (define (transpose-note steps note)
   (map (lambda (pitch)
@@ -78,9 +83,9 @@
   )
 
 #|
-(transpose-section 3 (list (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")) (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1")))) ;;((("3/4" ("E" "minor") "treble") ("A2" "2") ("C2" "1")))
+(transpose-section 3 (list (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "R" "1")) (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "R" "1")))) ;;((("3/4" ("E" "minor") "treble") ("A2" "2") ("C2" "1")))
 
 (transpose-section 2 (list (list (list "4/4" (list "C" "major") "bass") (list "C3" "E3" "G3" "1"))))
 					;((("4/4" ("C" "major") "bass") ("D3" "F#3" "A3" "1")))
-
 |#
+
