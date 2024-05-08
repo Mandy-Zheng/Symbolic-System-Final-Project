@@ -206,9 +206,9 @@ Return true if the symbol follows this pattern, else false.
 ; -> (("A#4" "Bb3" "2") ("G#2" "Bb1" "2"))
 |#
 
-; A measure predicate, at least two notes as arguments.
+; A measure predicate, at least 1 note as arguments.
 ; Has 1 meta and a list of notes.
-; Return true if at least two notes and meta, else false.
+; Return true if at least 1 notes and meta, else false.
 (define (measure? expr)
   (define (check-elements elts)
     (if (null? elts) ;; empty
@@ -229,8 +229,8 @@ Return true if the symbol follows this pattern, else false.
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "3/4" (list "F" "major") "bass") ; meta
-(list "A#4" "Bb3" "2"))) ; -> #t
+	   	(list "3/4" (list "F" "major") "bass") ; meta
+		(list "A#4" "Bb3" "2"))) ; -> #t
 
 (measure? (list
 	   (list "3/4" (list "F" "major") "bass") ; meta
