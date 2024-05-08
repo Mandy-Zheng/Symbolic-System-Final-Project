@@ -85,7 +85,7 @@
 	 "4. (show-all-commands-for-sections!) to see all commands for dealing with sections."
 	 "5. (show-all-commands-for-measures!) to see all commands for dealing with measures."
 	 "6. (show-all-commands-for-notes!) to see all commands for dealing with notes."
-	 "7. (note-example!) to see an example of a note."
+	 "7. (note-example!) to see an example of a note as well as rests."
 	 "8. (measure-example!) to see an example of a measure."
 	 "9. (section-example!) to see an example of a section.")))
 
@@ -125,7 +125,8 @@
 	 "6. (transpose-section! steps measure-start measure-end) to transpose the section with steps for measures in the range of measure-start and measure-end in the current voice."
 	 "7. (copy-section-to-current-voice! piece-name voice-name
 					measure-start-i measure-end-i
-					insert-i) to copy the section from another piece and paste it to the current voice at index insert-i."
+					insert-i)
+					to copy the section from another piece and paste it to the current voice at index insert-i."
 	 )))
 
 
@@ -158,7 +159,13 @@
 	 "Here are some examples:"
 	 "1. (A#3 2)"
 	 "2. (Cbb3 2)"
-	 "3. (F##7 1)")))
+	 "3. (F##7 1)"
+	 "A rest is indicated by the letter R:"
+	 "4. (R 2)"
+	 "You can add a period to indicate 1 and a half times the indicated duration:"
+	 "5. (A3 1.)"
+	 "6. (R 4.)"
+	 )))
 
 (define (measure-example!)      
   (display-messages (list "A measure is made of a meta data and a list of notes."
@@ -362,7 +369,7 @@
 ;; Return the last measure of the current-voice
 (define (get-last-measure)
   (let ((voice-body (get-current-voice-measures)))
-    (list-ref voice-body (- (length (voice-body)) 1))))
+    (list-ref voice-body (- (length voice-body) 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helper Functions to Modify Environment ;;;
@@ -487,8 +494,6 @@
   (get-current-voice-piece!))
 
 ;; replace measure measure-start (inclusive) to measure measure-end (inclusive) with list of new measures
-
-
 (define (edit-section! measure-start measure-end new-measures)
       (edit-section (parse new-measures))
       (get-current-voice-piece!))
@@ -589,7 +594,6 @@
   (get-current-voice-piece!))
 
 
-
 (define (copy-section-to-current-voice! piece-name voice-name
 					measure-start-i measure-end-i
 					insert-i)
@@ -626,3 +630,99 @@
 (define (play-music!)
   (convert-piece (symbol->string current-piece-name) (get-current-piece-body))
   (play-music "output"))
+
+
+
+#|
+SEE demo.scm for a more comprehensive usage of the UI.
+
+Below are test cases before the integration of the parser. Hence, they will not work anymore,
+they are to show that the UI works as expected, isolated from the parser. 
+|#
+
+#|
+(start-composing! 'nhung) 
+(define-new-piece! 'twinkle)   
+(define-new-voice! 'one)
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
+
+(add! (list (list "4/4" (list "C" "major") "treble")
+	    (list "G4" "4") (list "A4" "4") (list "C4" "E4" "2")))
+
+(define-new-voice! 'two)
+
+(add! (list (list "4/4" (list "C" "major") "bass")
+	    (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "2") ))
+
+(add!  (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+
+(insert! 5  (list (list "1/4" (list "C" "major") "bass")
+		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+
+(edit-section! 1 2 (list (list (list "1/4" (list "C" "major") "bass")
+			 (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )
+	       (list (list "1/4" (list "C" "major") "bass")
+		  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") )))
+
+(delete! 3 5)
+
+(insert! 2 (list
+       (list (list "4/4" (list "C" "major") "bass")
+	    (list "A4" "4") (list "A4" "4") (list "A4" "A4" "2") )
+       (list (list "4/4" (list "C" "major") "bass")
+	     (list "B4" "4") (list "B4" "4") (list "B4" "B4" "2")
+	     )))
+
+(edit-measure! 1 (list
+		  (list "4/4" (list "C" "major") "bass") ; meta
+		  (list (list "A#4" "Bb3" "2")
+			(list "G#2" "Bb1" "2"))))
+
+(edit-note! 1 1 (list "A4" "2"))  
+
+
+(measure? (list (list "4/4" (list "C" "major") "bass")
+		(list "B4" "4") (list "D4" "4") (list "F4" "A4" "2") ))
+
+(metadata? (list "4/4" (list "C" "major") "bass") )
+
+
+(define-new-piece! 'twinkle1)
+(define-new-voice! 'new)
+
+(delete-voice! 'new)
+(copy-voice-to-piece! 'twinkle 'one 0)
+
+(edit-note! 0 3 (list "A4" "300"))
+(edit-note! 1 1 (list "A4" "100"))     
+
+
+(delete! 0 1)
+(delete-section! 1 0)
+(get-current-piece!)
+(delete-section! 0 2)  
+
+
+(delete-voice! 'doesnotexist)
+(delete-voice! 'two)
+
+(edit-metadata-clef "treble" 2 3 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     ))
+
+(edit-metadata-key (list "E" "minor")  1 4 (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+		     (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
+		     (list (list "3/4" (list "F" "major") "bass")  (list "B3" "4") (list "D4" "4") (list "F4" "A4" "C4" "4") )
+))
+
+|#

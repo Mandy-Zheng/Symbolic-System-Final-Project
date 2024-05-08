@@ -1,16 +1,10 @@
 
 
-(define initial-env-bindings '())
-
 #|
-(define (define-initial-env-binding name value)
-  (let ((p (assq name initial-env-bindings)))
-    (if p
-        (set-cdr! p value)
-        (set! initial-env-bindings
-              (cons (cons name value) initial-env-bindings))))
-  name)
+Environment from SDF.
 |#
+
+(define initial-env-bindings '())
 
 (define the-empty-environment (list '*the-empty-environment*))
 

@@ -6,9 +6,7 @@
    (convert-time (get-time measure))
    (convert-key (get-key measure))
    (convert-clef (get-clef measure))
-   "\n"
-  )
-  )
+   "\n"))
 
 (define (convert-octave octave)
   (cond ((= 0 octave)  ",,,")
@@ -20,18 +18,14 @@
 	((= 6 octave)  "'''")
 	((= 7 octave)  "''''")
 	((= 8 octave)  "'''''")
-	(else (error "Invalid octave")))
-
-  )
+	(else (error "Invalid octave"))))
 
 (define (convert-accidental accidental)
   (cond ((string=? accidental sharp) "is")
 	((string=? accidental double-sharp) "isis")
 	((string=? accidental flat) "es")
 	((string=? accidental double-flat) "eses")
-	(else "") 
-	)
-  )
+	(else "")))
 
 (define (convert-pitch pitch)
   (if (rest? pitch)
@@ -54,12 +48,7 @@
 	       (converted "<"))
 	(if (= 1 (length chord-info))
 	    (string-append converted ">" (car chord-info))
-	    (lp (cdr chord-info) frequency (string-append converted (convert-pitch (car chord-info)) " "))
-	    
-	    )
-	)
-      )
-  )
+	    (lp (cdr chord-info) frequency (string-append converted (convert-pitch (car chord-info)) " "))))))
 
 #|
 (convert-note (list "A#2" "1")) ; "ais,,1"
@@ -73,20 +62,21 @@
 	   (converted ""))
     (if (= (length measure) 1)
 	(string-append converted (convert-note (car measure)) " | \n")
-	(lp (cdr measure) (string-append converted (convert-note (car measure)) " "))
-    )
-    )
-  )
+	(lp (cdr measure) (string-append converted (convert-note (car measure)) " ")))))
 
-;;(convert-measure (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ;"fis,,,2 a,,1 | \n"
+#|
+(convert-measure (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))) ; -> "fis,,,2 a,,1 | \n"
+|#
 
 (define (convert-time time)
   (string-append "\\time " time " "))
+
 (define (convert-key key)
   (string-append "\\key "
 		 (string-downcase (car key))
 		 " \\"
 		 (string-downcase (cadr key)) " "))
+
 (define (convert-clef clef)
   (string-append "\\clef " clef " "))
 
@@ -115,9 +105,7 @@
     (if (= 0 (string-length (string-append time key clef)))
 	(string-append "")
 	(string-append "\\bar \"||\" " time key clef "\n")
-	)
-
-    ))
+	)))
 
 #|
 (display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
@@ -141,14 +129,10 @@
 	  (lp (cdr sections) (cadr sections)
 	      (string-append converted
 			     (convert-metadata-if-different past-time past-key past-clef time key clef)
-			     (convert-measure measure)) time key clef)
-      
-      )
-      )
-    )
-  )
-#|
-;;(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
+			     (convert-measure measure)) time key clef)))))
+
+#|   
+(display (convert-section (list (list "3/4" (list "E" "minor") "treble") (list "F#1" "2") (list "A2" "1"))))
 |#
 
 (define (convert-voice voice)
@@ -185,19 +169,20 @@
     "open "
     "xdg-open ")
   )
- 
 
+;; output
+ 
 (load-option 'synchronous-subprocess)
+
 (define (open-pdf file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
   (run-shell-command (string-append (os-open-command) (string-append file-path ".pdf")))) 
-
 
 (define (play-music file-path)
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
   (run-shell-command (string-append (os-open-command) (string-append file-path ".midi")))) 
 
-;;output 
+
 #|
 (open-pdf "output")
 

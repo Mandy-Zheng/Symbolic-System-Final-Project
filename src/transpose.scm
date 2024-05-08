@@ -1,6 +1,5 @@
-;;(load "~/Symbolic-System-Final-Project/src/parser.scm")
-;(load "~/Symbolic-System-Final-Project/src/predicates.scm")
 (load "predicates.scm")
+
 (define chromatic-scale
   (list
    (list "C" "B#" "Dbb")
@@ -21,14 +20,12 @@
   (let lp ((idx 0))
       (if (member letter (list-ref chromatic-scale idx))
 	  idx
-	  (lp (+ idx 1))
-	  )
-      )
-  )
+	  (lp (+ idx 1)))))
+
 #|
-(get-chromatic-index "A") ; 9
-(get-chromatic-index "D##") ; 4
-(get-chromatic-index "Gb") ; 6
+(get-chromatic-index "A") ; -> 9
+(get-chromatic-index "D##") ; -> 4
+(get-chromatic-index "Gb") ; -> 6
 |#
 
 (define (transpose-pitch steps pitch)
@@ -70,9 +67,7 @@
 	     pitch
 	     (transpose-pitch steps pitch)
 	     )
-	 ) note)
-  )
-
+	 ) note))
 
 (define (transpose-measure steps measure)
   (append (list (get-metadata measure)) (map (lambda (note) (transpose-note steps note)) (get-notes-in-measure measure)))

@@ -1,51 +1,38 @@
-;; (define (print . args)
-;;   (let lp ((statement args))
-;;     (if (not (= (length statement) 0))
-;; 	(begin (display (car statement))
-;; 	(display "\n")
-;; 	(lp (cdr statement)))))
-;;   )
-
 (define sharp "#")
 (define flat "b")
 (define double-sharp "##")
 (define double-flat "bb")
 
-#|
-An accidental predicate where it returns true if the symbol is '# or 'b.
-|#
+; An accidental predicate where it returns true if the symbol is '# or 'b.
 (define (single-accidentals? expr)
   (or (string=? expr sharp)
       (string=? expr flat))
   )
-#|
-(single-accidentals? "#") ;#t
-(single-accidentals? "b") ;#t
-(single-accidentals? "##") ;#f
-(single-accidentals? "###") ;#f
-|#
 
 #|
-A double accidental predicate where it returns true if the symbol is '## or 'bb.
+(single-accidentals? "#") ; -> #t
+(single-accidentals? "b") ; -> #t
+(single-accidentals? "##") ; -> #f
+(single-accidentals? "###") ; -> #f
 |#
 
+; A double accidental predicate where it returns true if the symbol is '## or 'bb.
 (define (double-accidentals? expr)
   (or (string=? expr double-sharp)
       (string=? expr double-flat))
   )
 #|
-(double-accidentals? "b") ; #f
-(double-accidentals? "bb") ; #t
-(double-accidentals? "##") ; #t
-(double-accidentals? "bbb") ;#f
+
+(double-accidentals? "b") ; -> #f
+(double-accidentals? "bb") ; -> #t
+(double-accidentals? "##") ; -> #t
+(double-accidentals? "bbb") ; -> #f
 |#
 
 (define (accidentals? expr)
   (or (double-accidentals? expr) (single-accidentals? expr)))
 
-#|
-A letter predicate where it returns true if the symbol is a letter from A-G.
-|#
+; A letter predicate where it returns true if the symbol is a letter from A-G.
 (define (letter? expr)
   (member expr (list "A" "B" "C" "D" "E" "F" "G"))
   )
@@ -59,12 +46,12 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
   )
 
 #|
-(letter? "A") ;("A" "B" "C" "D" "E" "F" "G")
-(letter? "a") ;#f
-(letter? "C") ; ("C" "D" "E" "F" "G")
-(letter? "Ab") ;#f
-(letter? "F") ;("F" "G")
-(letter? "G") ;("G")
+(letter? "A") ; -> ("A" "B" "C" "D" "E" "F" "G")
+(letter? "a") ; -> #f
+(letter? "C") ; -> ("C" "D" "E" "F" "G")
+(letter? "Ab") ; -> #f
+(letter? "F") ; -> ("F" "G")
+(letter? "G") ; -> ("G")
 |#
 
 (define (get-letter pitch)
@@ -82,18 +69,19 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
     (substring pitch start-idx (string-length pitch))
     )
   )
+
 #|
-(get-letter "A#3") ; A
-(get-accidentals "A#3") ; #
-(get-octave "A#3") ; 3
+(get-letter "A#3") ; -> A
+(get-accidentals "A#3") ; -> #
+(get-octave "A#3") ; -> 3
 
-(get-letter "G2") ; G
-(get-accidentals "G2") ; ''
-(get-octave "G2") ; 2
+(get-letter "G2") ; -> G
+(get-accidentals "G2") ; -> ''
+(get-octave "G2") ; -> 2
 
-(get-letter "Fbb10") ; F
-(get-accidentals "Fbb10") ; bb
-(get-octave "Fbb10") ; 10
+(get-letter "Fbb10") ; -> F
+(get-accidentals "Fbb10") ; -> bb
+(get-octave "Fbb10") ; -> 10
 |#
 
 (define (get-first-pitch note)
@@ -103,13 +91,13 @@ A letter predicate where it returns true if the symbol is a letter from A-G.
   (list-ref note (- (length note) 1)))
 
 
-#|
-A pitch predicate where it returns true if the input is a valid symbol following the CFL:
-pitch ::= letter accidental? octave 
-letter ::= A | B | C | D | E | F | G
-accidental ::= # | ## | b | bb
-octave ::= [0-9]+
-|#
+; A pitch predicate where it returns true if the input is a valid symbol following the CFL:
+
+; pitch ::= letter accidental? octave 
+; letter ::= A | B | C | D | E | F | G
+; accidental ::= # | ## | b | bb
+; octave ::= [0-9]+
+
 (define (pitch? str)
   (let ((len (string-length str)))
     (cond ((< len 2) (rest? str))
@@ -171,6 +159,7 @@ octave ::= [0-9]+
 A note predicate where it is represented by a pitch and then a duration for teh note.
 Return true if the symbol follows this pattern, else false.
 |#
+
 (define (note? expr)
 
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
@@ -186,7 +175,6 @@ Return true if the symbol follows this pattern, else false.
        )
   )
 
-
 #|
 (note? (list "A#2" "3")) ;#t
 (note? (list "Cb3" "G##2" "2")) ;#t
@@ -197,9 +185,8 @@ Return true if the symbol follows this pattern, else false.
 (note? (list "R" "A#2" "2")) ;#f
 |#
 
-#|
-A bar predicate.
-|#
+
+; A bar predicate.
 (define (bar? expr) (equal? expr '||))
 
 #|
@@ -208,10 +195,7 @@ A bar predicate.
 (bar? 'a) ; -> #f
 |#
 
-
-#|
-Get a list of notes from the measure
-|#
+; Returns a list of notes from the measure.
 (define (get-notes-in-measure measure)
   (cdr measure))
 
@@ -219,52 +203,50 @@ Get a list of notes from the measure
 (pp (get-notes-in-measure (list (list "test" 1)
 				(list (list "A#4" "Bb3" "2")
 				      (list "G#2" "Bb1" "2")))))
-;; (("A#4" "Bb3" "2") ("G#2" "Bb1" "2"))
-
+; -> (("A#4" "Bb3" "2") ("G#2" "Bb1" "2"))
 |#
 
-
-#|
-A measure predicate, at least two notes as arguments.
-Has 1 meta and a list of notes.
-Return true if at least two notes and meta, else false.
-|#
+; A measure predicate, at least two notes as arguments.
+; Has 1 meta and a list of notes.
+; Return true if at least two notes and meta, else false.
 (define (measure? expr)
   (define (check-elements elts)
     (if (null? elts) ;; empty
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (cdr expr))) ;; at least two notes
+      (and (<= 1 (length (cdr expr))) ;; at least two notes
 	   (check-elements (cdr expr)))
       #f))
 
+;; meta with 1 note only
+
 #|
 (measure? (list
-	   (list "3" "4" (list "F" "major") "bass") ; meta
-	   (list (list "A#4" "Bb3" "2")
-		 (list "G#2" "Bb1" "2")))) ;; #t
+	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "A#4" "Bb3" "2")
+		 (list "G#2" "Bb1" "2"))) ; -> #t
 
 ;; meta with 1 note only
 (measure? (list
-	   (list "3" "4" (list "F" "major") "bass") ; meta
-	   (list (list "A#4" "Bb3" "2")))) ; #f
+	   (list "3/4" (list "F" "major") "bass") ; meta
+(list "A#4" "Bb3" "2"))) ; -> #t
+
+(measure? (list
+	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "A#4"  "2."))) ; -> #t
 
 ;; no meta with 1 note only		
 (measure? (list
-	   (list (list "A#4" "Bb3" "2")))) ; #f
-
+	   (list "A#4" "Bb3" "2"))) ; -> #f
 
 (measure? (list
-	   (list (list "A#4" "Bb3" "2")
-		(list "A#4" "Bb3" "2")))) ; #f
-
+	   (list "A#4" "Bb3" "2")
+		(list "A#4" "Bb3" "2"))) ; -> #f
 |#
 
-#|
-A section predicate, at least one measure as arguments.
-Return true if at least one measure, else false.
-|#
+; A section predicate, at least one measure as arguments.
+; Return true if at least one measure, else false.
 (define (section? expr)
 	(define (check-elements elts)
     	(if (null? elts) ;; empty
@@ -272,42 +254,32 @@ Return true if at least one measure, else false.
 		(and (measure? (car elts)) (check-elements (cdr elts)))))
 	(and (<= 1 (length expr)) ;; at least two measures
 	   (check-elements expr)))
+
 #|
+(section? (list (list
+					(list "4/4" (list "F" "major") "bass") ; meta
+					(list "G3" "Bb3" "2")
+					(list "C4" "E4" "2")))) ; -> #t
 
 (section? (list (list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #t
-
-(section? (list (list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2")))
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2"))
 				(list
-					(list "test" 1) ; meta
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #t
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2")))) ; -> #t
 
 ; malformed measure
 (section? (list (list
-					(list
-						(list "A#4" "Bb3" "2")
-						(list "G#2" "Bb1" "2"))))) ; -> #f
+					(list "A#4" "Bb3" "2")
+					(list "G#2" "Bb1" "2")))) ; -> #f
 
 ; malformed measure
 (section? (list (list
-					(list "test" 1) ; meta
-					(list (list "G#2" "Bb1" "2"))))) ; -> #f
-
-
+					(list "3/4" (list "F" "major") "bass") ; meta
+					(list "G#2" "Bb1" "2")))) ; -> #f
 |#
-; "G#3" --> "Ges'''"
-
-;;; convert to a specific number
-;;; more esaily
 
 ;;; Metadata
 
@@ -375,11 +347,10 @@ Return true if at least one measure, else false.
 
 ; these are getters for measures, not metadata
 
-; may not actually be the metadata if the input has none
 (define (get-metadata measure)
 	(if (metadata? (car measure))
 		(car measure)
-		(car (get-last-measure))))
+		(car (get-last-measure)))) ; grabs the metadata from the last measure of the piece
 
 (define (get-time measure) (caar measure))
 
@@ -390,18 +361,8 @@ Return true if at least one measure, else false.
   (caddr (car measure)))
 
 
-; TODO: clean up the CFL syntax below
 
-#|
-A metadata predicate where it returns true if the input is a valid symbol following the CFL:
-metadata ::= time-signature key-signature clef 
-time-signature ::= integer integer
-key-signature ::= letter-accidental tonality
-tonality ::= major | minor
-letter ::= A | B | C | D | E | F | G
-accidental ::= # | ## | b | bb
-clef ::= treble | bass | alto | tenor | percussion
-|#
+; A metadata predicate where it returns true if the input is a valid symbol following the CFL:
 
 (define (metadata? expr)
   (and
@@ -420,10 +381,4 @@ clef ::= treble | bass | alto | tenor | percussion
 (metadata? (list "2/4" (list "C#" "minor"))) ; -> #f
 (metadata? (list "2/4" "C#" "minor" "treble")) ; -> #f
 (metadata? (list "G#2" "A2")) ; -> #f
-|#
-
-#|
-(measure?  (list (list "4/4" (list "C" "major") "treble")              (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4")))
-
-(metadata?  (list "4/4" (list "C" "major") "treble")  )
 |#

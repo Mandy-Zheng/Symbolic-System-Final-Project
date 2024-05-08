@@ -23,21 +23,22 @@
 
 (note-example!)
 
+(measure-example!)
+
 ;; actual content
 (define-new-piece! 'twinkle1)   
 
 (define-new-voice! 'right)
 
 ;; start by adding measure or section
-
 ;; a measure
 (add! '((4 4 (C major) treble) (C4 4) (C4 4) (G4 4) (G4 4)))
 
-;; a whole section!
-(add! '((4 4 (C major) treble) (A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
+;; a whole section! and with no metadata!
+(add! '((A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
 
 ;; another section
-(add! '((4 4 (C major) treble) (C4 4) (C4 4) (G4 4) (G4 4) || (A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
+(add! '((C4 4) (C4 4) (G4 4) (G4 4) || (A4 4) (A4 4) (G4 2) || (F4 4) (F4 4) (E4 4) (E4 4) || (D4 4) (D4 4) (C4 2)))
 
 ;; show the current piece
 (get-current-piece!)
@@ -46,7 +47,7 @@
 (show-pdf!)   
 
 ;; oh no! what about up above the world?! we forgot the middle section
-(insert! 5 '((4 4 (C major) treble) (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D4 2) || (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D#4 2) || (E4 4) (E4 4) (D#4 2)))
+(insert! 5 '((G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D4 2) || (G4 4) (G4 4) (F4 4) (F4 4) || (E4 4) (E4 4) (D#4 2) || (E4 4) (E4 4) (D#4 2)))
 
 ;; we have a duplicate measure at the end!
 (delete! 9)
@@ -67,12 +68,15 @@
 ;; the entire part
 (add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 E3 G3 2)))
 
-(add! '((4 4 (C major) bass) (G3 1) || (G3 1) || (G3 1) || (G3 1)))
+(add! '((G3 1) || (G3 1) || (G3 1) || (G3 1)))
 
-(add! '((4 4 (C major) bass) (C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 E3 G3 2)))
+(add! '((C3 E3 G3 1) || (F3 A3 2) (C3 E3 G3 2) || (F3 A3 2) (C3 G3 2) || (F3 G3 2) (C3 E3 G3 2)))
 
 (get-all-pieces-names!)
 (get-current-piece!)
+
+;; let's see the new piece
+(show-pdf!)
 
 ;; now, switch!
 (switch-piece! 'twinkle1)
@@ -90,12 +94,11 @@
 ;; let's go to D major for the last section
 (transpose-section! 2 9 12)
 
-
 ;; but, the key signature is now wrong...
 (edit-key! 9 12 '(D major))
 
 
-;;let's update it to D major for the right hand as well
+;; let's update it to D major for the right hand as well
 (switch-voice! 'right)
 (transpose-section! 2 9 12)
 (edit-key! 9 12 '(D major))
@@ -104,3 +107,17 @@
 (show-pdf!)
 
 (play-music!)
+
+
+;; we can also include rests and dots now!
+
+(define-new-piece! 'rests-and-dots)   
+
+(define-new-voice! 'first)
+
+(add! '((3 4 (D major) treble) (D4 4) (R 2)))
+(add! '((A4 4.) (R 4.)))
+
+(get-current-piece!)
+
+(show-pdf!)
