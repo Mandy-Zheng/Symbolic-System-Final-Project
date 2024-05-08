@@ -28,10 +28,17 @@
 	(else "")))
 
 (define (convert-pitch pitch)
-  (string-append (string-downcase (get-letter pitch))
-		 (convert-accidental (get-accidentals pitch))
-		 (convert-octave (string->number (get-octave pitch))))
+  (if (rest? pitch)
+      (string-append (string-downcase (get-letter pitch)))
+      (string-append (string-downcase (get-letter pitch))
+		     (convert-accidental (get-accidentals pitch))
+		     (convert-octave (string->number (get-octave pitch))))
+      )
   )
+#|
+(convert-pitch "R") ;r
+(convert-pitch "C#3") ;cis
+|#
 
 (define (convert-note note)
   (if (= 2 (length note))
@@ -44,8 +51,10 @@
 	    (lp (cdr chord-info) frequency (string-append converted (convert-pitch (car chord-info)) " "))))))
 
 #|
-(convert-note (list "A#2" "1")) ; -> "ais,,1"
-(convert-note (list "A#2" "G2" "Bb4" "1")) ; -> "<ais,, g,, bes >1"
+(convert-note (list "A#2" "1")) ; "ais,,1"
+(convert-note (list "A#2" "G2" "Bb4" "1")) ; "<ais,, g,, bes >1"
+(convert-note (list "R" "2.")) ;r2.
+(convert-note (list "Fb2" "4.")) ;fes,4.
 |#
 
 (define (convert-measure measure-info)
@@ -99,7 +108,7 @@
 	)))
 
 #|
-(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; -> \bar "||" \key c \minor \clef bass 
+(display (convert-metadata-if-different "4/4" (list "c" "major") "treble" "4/4" (list "c" "minor") "bass")) ; \bar "||" \key c \minor \clef bass 
 |#
 
 (define (convert-section . sections)
@@ -147,10 +156,12 @@
       (display ">> \n \\layout {indent=0} \n \\midi {} \n}\n" output-port))))
 
 #|
-(display (convert-piece (list (list "voice1") (list (list (list "4/4" (list "C" "major") "treble")  (list "C4" "4") (list "D4" "4") (list "E4" "4") (list "F4" "4"))
-			      (list (list "4/4" (list "C" "major") "treble")  (list "G4" "4") (list "A4" "4") (list "C4" "E4" "G4" "2"))))
+(display (convert-piece "name" (list (list (list "voice1") (list (list (list "4/4" (list "C" "major") "treble") (list "R" "4") (list "C4" "4") (list "R" "2"))
+			      (list (list "4/4" (list "C" "major") "treble")  (list "R" "4") (list "C4" "E4" "G4" "2."))))
 			(list (list "voice2") (list (list (list "4/4" (list "C" "major") "bass")  (list "A3" "4") (list "G#4" "4") (list "C4" "E4" "G4" "2") )
-			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2"))))))
+			      (list (list "4/4" (list "C" "major") "bass")  (list "B4" "4") (list "D4" "4") (list "F4" "A4" "C4" "2")))))))
+
+(get-clef (list (list "4/4" (list "c" "major")  "treble") (list))) ; "treble"
 |#
 
 (define (os-open-command)
@@ -171,7 +182,9 @@
   (run-shell-command (string-append "lilypond " (string-append file-path ".ly")))
   (run-shell-command (string-append (os-open-command) (string-append file-path ".midi")))) 
 
+
 #|
 (open-pdf "output")
+
 (play-music "output")
 |#

@@ -116,7 +116,7 @@
 (define-new-voice! 'first)
 
 (add! '((3 4 (D major) treble) (D4 4) (R 2)))
-(add! '((A4 4.)))
+(add! '((A4 4.) (R 4.)))
 
 (get-current-piece!)
 

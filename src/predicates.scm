@@ -37,6 +37,14 @@
   (member expr (list "A" "B" "C" "D" "E" "F" "G"))
   )
 
+(define (rest? expr)
+  (string=? expr "R")
+  )
+
+(define (dot? expr)
+  (string=? expr ".")
+  )
+
 #|
 (letter? "A") ; -> ("A" "B" "C" "D" "E" "F" "G")
 (letter? "a") ; -> #f
@@ -89,9 +97,10 @@
 ; letter ::= A | B | C | D | E | F | G
 ; accidental ::= # | ## | b | bb
 ; octave ::= [0-9]+
+
 (define (pitch? str)
   (let ((len (string-length str)))
-    (cond ((< len 2) #f)
+    (cond ((< len 2) (rest? str))
 	  ((= len 2) (and (letter? (substring str 0 1)) (string->number (substring str 1 2))))
 	  (else
 	   (let ((letter (substring str 0 1))
@@ -104,43 +113,65 @@
 		       (possible-octave-3 (substring str 1 len)))
 		   (if (and (letter? letter) (single-accidentals? accidental-single) (string->number possible-octave-2))
 		       #t
-		       (and (letter? letter) (number? possible-octave-3))))))))))
+		       (and (letter? letter) (number? possible-octave-3)))
+		   )
+		 )
+	     )
+	   )
+	  )))
 
 #|
-(pitch? "A#3") ; -> #t
-(pitch? "#3") ; -> #f
-(pitch? "f##3") ; -> #f
-(pitch? "G2") ; -> #t
-(pitch? "Cbb") ; -> #f
-(pitch? "Cbb3") ; -> #t
-(pitch? "F##17") ; -> #t
-(pitch? "2") ; -> #f
+(pitch? "A#3") ;#t
+(pitch? "#3") ;#f
+(pitch? "f##3") ;#f
+(pitch? "G2") ;#t
+(pitch? "Cbb") ;#f
+(pitch? "Cbb3") ;#t
+(pitch? "F##17") ;#t
+(pitch? "2") ;#f
+(pitch? "R") ;#t
 |#
 
+
 (define (frequency? expr)
-  (and (string->number expr) (>= (string->number expr) 0))
+  (let ((base-duration (string->number (substring expr 0 1)))
+	(len (string-length expr)))
+    (cond ((= len 1) (and base-duration (>= base-duration 0)))
+	  ((= len 2) (and base-duration (>= base-duration 0) (dot? (substring expr 1))))
+	  (else #f))
+    )
   )
 
 #|
-(frequency? "1") ; -> #t
-(frequency? "4") ; -> #t
-(frequency? "1/3") ; -> #t
-(frequency? "a1") ; -> #f
-(frequency? "-4") ; -> #f
-(frequency? "0") ; -> #t
+(frequency? "1") ;#t
+(frequency? "4") ;#t
+(frequency? "1/3") ;#t
+(frequency? "a1") ;#f
+(frequency? "-4") ;#f
+(frequency? "0") ;#t
+(frequency? "2.") ;#t
+(frequency? "1..") ;#f
+(frequency? ".8") ;#f
 |#
 
 
-; A note predicate where it is represented by a pitch and then a duration for teh note.
-; Return true if the symbol follows this pattern, else false.
+#|
+A note predicate where it is represented by a pitch and then a duration for teh note.
+Return true if the symbol follows this pattern, else false.
+|#
+
 (define (note? expr)
+
   (and (list? expr) (>= (length expr) 2)  ;; check list and at least one note and duration
-       (let lp ((expr expr))
-	 (if (= 1 (length expr))
-	     (frequency? (car expr)) ;; last item is note duration
-	     (and (pitch? (car expr)) (lp (cdr expr))) ;; check every item before frequency is a valid pitch
+       (if (and (rest? (car expr)) (frequency? (cadr expr))) ;handle rest notes
+	   #t
+	   (let lp ((expr expr))
+	     (if (= 1 (length expr))
+		 (frequency? (car expr)) ;; last item is note duration
+		 (and (not (rest? (car expr))) (pitch? (car expr)) (lp (cdr expr))) ;; check every item before frequency is a valid pitch
+		 )
 	     )
-	 )
+	   )
        )
   )
 
@@ -150,7 +181,10 @@
 (note? (list "Cb3" "G##2")) ;#f
 (note? (list "2")) ;#f
 (note? (list "Bbb4" "D##2" "F2" "7")) ;#t
+(note? (list "R" "2")) ;#t
+(note? (list "R" "A#2" "2")) ;#f
 |#
+
 
 ; A bar predicate.
 (define (bar? expr) (equal? expr '||))
@@ -181,9 +215,11 @@
 	#t
 	(and (note? (car elts)) (check-elements (cdr elts)))))
   (if (metadata? (car expr))
-      (and (<= 2 (length (cdr expr))) ;; at least two notes
+      (and (<= 1 (length (cdr expr))) ;; at least two notes
 	   (check-elements (cdr expr)))
       #f))
+
+;; meta with 1 note only
 
 #|
 (measure? (list
@@ -194,7 +230,11 @@
 ;; meta with 1 note only
 (measure? (list
 	   (list "3/4" (list "F" "major") "bass") ; meta
-	   (list "A#4" "Bb3" "2"))) ; -> #f
+(list "A#4" "Bb3" "2"))) ; -> #t
+
+(measure? (list
+	   (list "3/4" (list "F" "major") "bass") ; meta
+	   (list "A#4"  "2."))) ; -> #t
 
 ;; no meta with 1 note only		
 (measure? (list
@@ -324,13 +364,6 @@
 
 ; A metadata predicate where it returns true if the input is a valid symbol following the CFL:
 
-; metadata ::= time-signature key-signature clef 
-; time-signature ::= integer integer
-; key-signature ::= letter-accidental tonality
-; tonality ::= major | minor
-; letter ::= A | B | C | D | E | F | G
-; accidental ::= # | ## | b | bb
-; clef ::= treble | bass | alto | tenor | percussion
 (define (metadata? expr)
   (and
     (list? expr)

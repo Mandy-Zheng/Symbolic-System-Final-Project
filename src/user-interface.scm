@@ -610,7 +610,7 @@
 					       new-section (- insert-i 1))))))))   
   (get-current-voice-piece!))
 	  
-(dxefine (transpose-measure! steps measure-idx)
+(define (transpose-measure! steps measure-idx)
   (let ((old-measure (get-measure-at-index (- measure-idx 1))))
     (edit-section measure-idx measure-idx (transpose-measure steps old-measure))
      (get-current-voice-piece!))
