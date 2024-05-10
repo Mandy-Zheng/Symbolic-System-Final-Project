@@ -1,8 +1,8 @@
 (load "user-interface.scm")
 
-;;;;;;;;;;;;
-;;; DEMO ;;;
-;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Bach's Fugue in G Minor ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (start-composing! 'bach) 
 
